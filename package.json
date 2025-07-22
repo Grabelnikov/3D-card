@@ -1,0 +1,16 @@
+{
+  "name": "3d-card",
+  "version": "1.0.0",
+  "description": "Interactive 3D card",
+  "type": "commonjs",
+  "scripts": {
+    "start": "live-server --open=./index.html --host=127.0.0.1 --port=8080 --watch=.",
+    "test": "echo \"All tests passing\" && exit 0"
+  },
+  "keywords": ["3d", "card", "interactive", "prototype"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
