@@ -104,7 +104,7 @@
 
         .image-container.mouse-leave .duplicate-image,
         .image-container.mouse-leave .centered-image {
-            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s ease-out, box-shadow 0.6s ease-out;
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .control-group {
@@ -852,9 +852,26 @@ class SimpleCardSystem {
         document.addEventListener('pointerleave', () => {
             this.handleMouseLeave();
         }, { passive: true });
+        
+        // Reset card when mouse enters sidebar (adjustment mode)
+        const sidebar = document.querySelector('.app-sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('mouseenter', () => {
+                this.handleMouseLeave();
+            }, { passive: true });
+        }
     }
     
     handleMouseMove(event) {
+        // Check if mouse is over the content area (not sidebar)
+        const contentArea = document.querySelector('.app-content');
+        const contentBounds = contentArea.getBoundingClientRect();
+        
+        if (event.clientX < contentBounds.left) {
+            // Mouse is in sidebar - don't process movement
+            return;
+        }
+        
         const bounds = this.container.getBoundingClientRect();
         const centerX = bounds.left + bounds.width / 2;
         const centerY = bounds.top + bounds.height / 2;
@@ -961,10 +978,10 @@ class SimpleCardSystem {
         const scale = this.duplicateScaleFactor;
         const opacity = this.duplicateOpacityFactor;
         
-        // Reset all transforms using manual rotation settings (not 0°)
-        const neutralBaseTransform = `rotateX(${this.settings.maxTiltX}deg) rotateY(${this.settings.maxTiltY}deg)`;
+        // Reset all transforms to completely flat (0° tilt)
+        const neutralBaseTransform = `rotateX(0deg) rotateY(0deg)`;
         
-        // All layers reset to neutral using manual rotation values
+        // All layers reset to completely flat position
         
         // Main card reset
         this.mainImage.style.transform = `${neutralBaseTransform} translateZ(0px)`;
@@ -975,8 +992,8 @@ class SimpleCardSystem {
         this.duplicateImage.style.filter = `blur(${this.settings.duplicateBlur}px)`;
         
         // Reset cached transform values
-        this.lastRotX = this.settings.maxTiltX;
-        this.lastRotY = this.settings.maxTiltY;
+        this.lastRotX = 0;
+        this.lastRotY = 0;
         this.lastTranslateX = 0;
         this.lastTranslateY = 0;
         
