@@ -1,6 +1,6 @@
 # 3D Card Prototype
 
-Interactive 3D card demonstration for Airbnb celebratory moments.
+Interactive 3D card demonstration.
 
 ## View Demo
 Open `index.html` in Chrome or deploy to Vercel.
