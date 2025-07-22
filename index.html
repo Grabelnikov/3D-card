@@ -50,13 +50,6 @@
             align-items: center;
         }
 
-        .card-title {
-            font-size: 20px;
-            color: #6C6C6C;
-            margin-top: 60px;
-            font-weight: 100;
-        }
-
         .image-container {
             text-align: center;
             max-width: 270px;
@@ -75,11 +68,11 @@
             left: 0;
             width: 270px;
             height: 400px;
-            transform: rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg)) translateZ(-5px) scale(var(--scale, 1)) translate(var(--tx, 0px), var(--ty, 0px));
+            transform: var(--dup-transform, rotateX(0deg) rotateY(0deg) translateZ(-5px) scale(1) translate(0px, 0px));
             transform-origin: 50% 50%;
             filter: blur(var(--blur, 24px));
             opacity: var(--opacity, 0.6);
-            transition: transform 0.3s ease-out, filter 0.3s ease-out, opacity 0.3s ease-out;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backface-visibility: hidden;
         }
 
@@ -91,7 +84,7 @@
             transform: rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg)) translateZ(0px);
             transform-origin: 50% 50%;
             transform-style: preserve-3d;
-            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backface-visibility: hidden;
             box-shadow: 
                 var(--shadow-x-1, 0px) var(--shadow-y-1, 6px) 8px rgba(0,0,0,0.04),
@@ -111,16 +104,6 @@
             overflow: visible;
         }
 
-        .transform-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            transform: rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg));
-            transition: transform 0.3s ease-out;
-            backface-visibility: hidden;
-            overflow: visible;
-        }
 
         .image-container.mouse-leave .duplicate-image,
         .image-container.mouse-leave .centered-image {
@@ -333,7 +316,6 @@
                             style="position: absolute; width: 740px; height: 810px; 
                                    top: -285px; left: -235px; pointer-events: none;
                                    transform-origin: 50% 50%;
-                                   transition: transform 0.3s ease-out;
                                    backface-visibility: hidden;
                                    display: block;"></canvas>
                     <div class="duplicate-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
@@ -902,7 +884,7 @@ class SimpleCardSystem {
             if (rotChanged || translateChanged) {
                 const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
                 const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${this.duplicateScaleFactor.toFixed(3)}) translate(${translateX.toFixed(1)}px, ${(this.settings.duplicateYOffset + translateY).toFixed(1)}px)`;
-                this.duplicateImage.style.transform = duplicateTransform;
+                this.duplicateImage.style.setProperty('--dup-transform', duplicateTransform);
             }
             // Update opacity and blur regardless (dynamic based on distance)
             this.duplicateImage.style.opacity = opacity.toFixed(3);
@@ -964,7 +946,7 @@ class SimpleCardSystem {
         this.mainImage.style.transform = `${neutralBaseTransform} translateZ(0px)`;
         
         const neutralDuplicateTransform = `${neutralBaseTransform} translateZ(-5px) scale(${scale.toFixed(3)}) translate(0px, ${this.settings.duplicateYOffset}px)`;
-        this.duplicateImage.style.transform = neutralDuplicateTransform;
+        this.duplicateImage.style.setProperty('--dup-transform', neutralDuplicateTransform);
         this.duplicateImage.style.opacity = opacity.toFixed(3);
         this.duplicateImage.style.filter = `blur(${this.settings.duplicateBlur}px)`;
         
@@ -1090,7 +1072,6 @@ class SimpleCardSystem {
         if (shadowsToggle) {
             shadowsToggle.addEventListener('change', (e) => {
                 this.toggleShadows(e.target.checked);
-                this.resetToNeutral();
             });
         }
 
