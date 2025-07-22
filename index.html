@@ -369,7 +369,6 @@ class GrainShadowRenderer {
             offset3: [0, 36]
         };
         
-        console.log('GrainShadowRenderer initialized with debug mode enabled');
         this.render();
     }
     
@@ -518,12 +517,9 @@ class GrainShadowRenderer {
         
         if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
             console.error('Program linking error:', this.gl.getProgramInfoLog(program));
-            console.error('Vertex shader log:', this.gl.getShaderInfoLog(vertexShader));
-            console.error('Fragment shader log:', this.gl.getShaderInfoLog(fragmentShader));
             return null;
         }
         
-        console.log('WebGL shader program compiled and linked successfully');
         return program;
     }
     
@@ -562,15 +558,12 @@ class GrainShadowRenderer {
     }
     
     updateGrainSettings(settings) {
-        console.log('GrainShadowRenderer.updateGrainSettings called with:', settings);
         this.settings = settings;
-        console.log('About to call render() from updateGrainSettings');
         this.render();
     }
     
     setDebugMode(enabled) {
         this.debugMode = enabled;
-        console.log('Debug mode:', enabled ? 'ON' : 'OFF');
         this.render();
     }
     
@@ -601,20 +594,6 @@ class GrainShadowRenderer {
         const error = this.gl.getError();
         if (error !== this.gl.NO_ERROR) {
             console.error('WebGL error after setting uniforms:', error);
-        }
-        
-        // Debug logging (reduced)
-        if (this.debugMode) {
-            console.log('Render called - Debug mode ON');
-            console.log('Rendering with resolution:', this.canvas.width, this.canvas.height);
-        } else {
-            // Log dynamic offset values during mouse movement
-            if (this.shadowOffsets.offset1[0] !== 0 || this.shadowOffsets.offset1[1] !== 6) {
-                console.log('Dynamic offsets detected:');
-                console.log('  offset1:', this.shadowOffsets.offset1[0], this.shadowOffsets.offset1[1]);
-                console.log('  offset2:', this.shadowOffsets.offset2[0], this.shadowOffsets.offset2[1]); 
-                console.log('  offset3:', this.shadowOffsets.offset3[0], this.shadowOffsets.offset3[1]);
-            }
         }
         
         // Draw
@@ -671,7 +650,6 @@ class ImageUploadHandler {
                         }
                         
                         this.currentImageUrl = e.target.result;
-                        console.log('Image processed, URL length:', this.currentImageUrl.length);
                         this.applyImageBackground();
                         this.setStatus(`Image uploaded (${img.width}×${img.height})`, 'success');
                         resolve();
@@ -695,19 +673,16 @@ class ImageUploadHandler {
         }
         
         const bgStyle = `url(${this.currentImageUrl})`;
-        console.log('Applying background:', bgStyle);
         
         // Apply to main card and duplicate only (exclude shadow emulator)
         if (this.cardSystem.mainImage) {
             this.cardSystem.mainImage.style.background = bgStyle;
-            console.log('Applied to main image');
         } else {
             console.error('Main image element not found');
         }
         
         if (this.cardSystem.duplicateImage) {
             this.cardSystem.duplicateImage.style.background = bgStyle;
-            console.log('Applied to duplicate image');
         } else {
             console.error('Duplicate image element not found');
         }
@@ -726,9 +701,7 @@ class ImageUploadHandler {
         }
         
         // Restore gradient to main and duplicate cards
-        console.log('Restoring gradient to elements');
         [this.cardSystem.mainImage, this.cardSystem.duplicateImage].filter(Boolean).forEach(el => {
-            console.log('Restoring gradient to:', el.className);
             el.style.background = this.defaultGradient;
             el.style.backgroundSize = '';
             el.style.backgroundRepeat = '';
@@ -773,13 +746,16 @@ class SimpleCardSystem {
         };
         
         this.container = document.querySelector('.image-container');
-        this.wrapper = document.querySelector('.image-wrapper');
         this.mainImage = this.container.querySelector('.centered-image');
         this.duplicateImage = this.container.querySelector('.duplicate-image');
         this.grainCanvas = null;
         this.grainRenderer = null;
         this.maxDuplicateOffset = 15;
         this.imageUploadHandler = null;
+        
+        // Cache for shadow values to prevent redundant DOM updates
+        this.lastShadowX = 0;
+        this.lastShadowY = 0;
         
         this.init();
     }
@@ -799,6 +775,8 @@ class SimpleCardSystem {
         if (this.grainCanvas) {
             try {
                 this.grainRenderer = new GrainShadowRenderer(this.grainCanvas, this.settings);
+                // Set static grain canvas transform once (safe distance for 4° tilt - 30px safety margin)
+                this.grainCanvas.style.transform = 'translateZ(-30px)';
             } catch (e) {
                 console.warn('WebGL not available for grain shadows:', e);
                 this.settings.grainEnabled = false;
@@ -808,10 +786,6 @@ class SimpleCardSystem {
     }
     
     initializeImageUpload() {
-        console.log('Initializing image upload handler');
-        console.log('Main image element:', this.mainImage ? this.mainImage.className : 'NOT FOUND');
-        console.log('Duplicate image element:', this.duplicateImage ? this.duplicateImage.className : 'NOT FOUND');
-        
         this.imageUploadHandler = new ImageUploadHandler(this);
         
         // File input event listener
@@ -888,13 +862,6 @@ class SimpleCardSystem {
         
         const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
         
-        // Shadows now cast by main card via box-shadow
-        
-        // Grain canvas layer (safe distance for 4° tilt - 30px safety margin)
-        if (this.grainCanvas) {
-            this.grainCanvas.style.transform = `translateZ(-30px)`;
-        }
-        
         // Main card layer (reference point)
         this.mainImage.style.transform = `${baseTransform} translateZ(0px)`;
         
@@ -912,6 +879,11 @@ class SimpleCardSystem {
     }
     
     updateBoxShadows(translateX, translateY) {
+        // Only update if shadow values have changed significantly (avoid micro-updates)
+        if (Math.abs(translateX - this.lastShadowX) < 0.1 && Math.abs(translateY - this.lastShadowY) < 0.1) {
+            return;
+        }
+        
         this.mainImage.style.setProperty('--shadow-x-1', `${(translateX * 0.3).toFixed(2)}px`);
         this.mainImage.style.setProperty('--shadow-y-1', `${(6 + translateY * 0.3).toFixed(2)}px`);
         
@@ -929,6 +901,10 @@ class SimpleCardSystem {
                 offset3: [translateX, 36 + translateY]
             });
         }
+        
+        // Cache current values
+        this.lastShadowX = translateX;
+        this.lastShadowY = translateY;
     }
     
     handleMouseLeave() {
@@ -1120,22 +1096,13 @@ class SimpleCardSystem {
             return;
         }
         
-        console.log('Attached grain slider listener for:', controlName);
-        
         control.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
-            console.log(`Grain slider ${controlName} changed to:`, value);
-            
             display.textContent = value;
             this.settings[settingName] = value;
             
-            console.log('Updated settings:', this.settings);
-            
             if (this.grainRenderer && this.settings.grainEnabled) {
-                console.log('Calling updateGrainSettings with:', this.settings);
                 this.grainRenderer.updateGrainSettings(this.settings);
-            } else {
-                console.log('Grain renderer not available or grain disabled');
             }
         });
     }
@@ -1153,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    console.log('3D Card system initialized. Use debugGrain(true/false) to toggle debug mode.');
+    // 3D Card system initialized
 });
 </script>
 </body>
