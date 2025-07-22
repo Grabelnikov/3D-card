@@ -758,6 +758,27 @@ class SimpleCardSystem {
         this.lastShadowX = 0;
         this.lastShadowY = 0;
         
+        // Phase 1: Pre-computed constants for performance optimization
+        this.extendedZoneFactor = 0.75;
+        this.maxNormalized = 1.3;
+        this.opacityDistanceFactor = 0.2;
+        this.shadowMultipliers = [0.3, 0.6, 1.0];
+        this.shadowBaseOffsets = [6, 18, 36];
+        
+        // Phase 2: Transform change detection
+        this.lastRotX = 0;
+        this.lastRotY = 0;
+        this.lastTranslateX = 0;
+        this.lastTranslateY = 0;
+        this.transformThreshold = 0.05;
+        
+        // Pre-allocated reusable objects
+        this.tempCoords = { x: 0, y: 0 };
+        
+        // Cached computed values that change with settings
+        this.duplicateScaleFactor = this.settings.duplicateScale / 100;
+        this.duplicateOpacityFactor = this.settings.duplicateOpacity / 100;
+        
         this.init();
     }
     
@@ -836,22 +857,21 @@ class SimpleCardSystem {
         const mouseX = event.clientX - centerX;
         const mouseY = event.clientY - centerY;
         
-        const extendedZoneX = bounds.width * 0.75;
-        const extendedZoneY = bounds.height * 0.75;
+        const extendedZoneX = bounds.width * this.extendedZoneFactor;
+        const extendedZoneY = bounds.height * this.extendedZoneFactor;
         
-        const normalizedX = Math.max(-1.3, Math.min(1.3, mouseX / extendedZoneX));
-        const normalizedY = Math.max(-1.3, Math.min(1.3, mouseY / extendedZoneY));
+        const normalizedX = Math.max(-this.maxNormalized, Math.min(this.maxNormalized, mouseX / extendedZoneX));
+        const normalizedY = Math.max(-this.maxNormalized, Math.min(this.maxNormalized, mouseY / extendedZoneY));
         
         const rotX = -normalizedY * this.settings.maxTiltX;
         const rotY = normalizedX * this.settings.maxTiltY;
         const translateX = -normalizedX * this.maxDuplicateOffset;
         const translateY = -normalizedY * this.maxDuplicateOffset;
         
-        // Calculate dynamic opacity
+        // Calculate dynamic opacity using pre-computed constants
         const distance = Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY);
-        const baseOpacity = this.settings.duplicateOpacity / 100;
-        const opacityFactor = 1 - (Math.min(distance, 1.5) * 0.2);
-        const opacity = Math.max(0.1, baseOpacity * opacityFactor);
+        const opacityFactor = 1 - (Math.min(distance, 1.5) * this.opacityDistanceFactor);
+        const opacity = Math.max(0.1, this.duplicateOpacityFactor * opacityFactor);
         
         this.applyTransforms(rotX, rotY, translateX, translateY, opacity);
         
@@ -859,22 +879,37 @@ class SimpleCardSystem {
     }
     
     applyTransforms(rotX, rotY, translateX, translateY, opacity) {
-        // Standardized transform function order: rotateX() rotateY() translateZ() [scale()] [translate()]
+        // Phase 2: Only update if transform values have changed significantly
+        const rotChanged = Math.abs(rotX - this.lastRotX) >= this.transformThreshold || Math.abs(rotY - this.lastRotY) >= this.transformThreshold;
+        const translateChanged = Math.abs(translateX - this.lastTranslateX) >= this.transformThreshold || Math.abs(translateY - this.lastTranslateY) >= this.transformThreshold;
         
-        const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
+        if (rotChanged || translateChanged) {
+            // Standardized transform function order: rotateX() rotateY() translateZ() [scale()] [translate()]
+            const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
+            
+            // Main card layer (reference point)
+            this.mainImage.style.transform = `${baseTransform} translateZ(0px)`;
+            
+            // Cache current transform values
+            this.lastRotX = rotX;
+            this.lastRotY = rotY;
+            this.lastTranslateX = translateX;
+            this.lastTranslateY = translateY;
+        }
         
-        // Main card layer (reference point)
-        this.mainImage.style.transform = `${baseTransform} translateZ(0px)`;
-        
-        // Duplicate layer (only if visible)
+        // Duplicate layer (only if visible) - always update opacity as it's dynamic
         if (this.settings.duplicateVisible) {
-            const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${(this.settings.duplicateScale / 100).toFixed(3)}) translate(${translateX.toFixed(1)}px, ${(this.settings.duplicateYOffset + translateY).toFixed(1)}px)`;
-            this.duplicateImage.style.transform = duplicateTransform;
+            if (rotChanged || translateChanged) {
+                const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
+                const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${this.duplicateScaleFactor.toFixed(3)}) translate(${translateX.toFixed(1)}px, ${(this.settings.duplicateYOffset + translateY).toFixed(1)}px)`;
+                this.duplicateImage.style.transform = duplicateTransform;
+            }
+            // Update opacity and blur regardless (dynamic based on distance)
             this.duplicateImage.style.opacity = opacity.toFixed(3);
             this.duplicateImage.style.filter = `blur(${this.settings.duplicateBlur}px)`;
         }
         
-        if (this.settings.shadowsEnabled) {
+        if (this.settings.shadowsEnabled && (rotChanged || translateChanged)) {
             this.updateBoxShadows(translateX, translateY);
         }
     }
@@ -885,21 +920,24 @@ class SimpleCardSystem {
             return;
         }
         
-        this.mainImage.style.setProperty('--shadow-x-1', `${(translateX * 0.3).toFixed(2)}px`);
-        this.mainImage.style.setProperty('--shadow-y-1', `${(6 + translateY * 0.3).toFixed(2)}px`);
+        // Phase 2: Use pre-computed constants and batch DOM updates
+        const shadowXValues = this.shadowMultipliers.map(mult => (translateX * mult).toFixed(2) + 'px');
+        const shadowYValues = this.shadowMultipliers.map((mult, i) => (this.shadowBaseOffsets[i] + translateY * mult).toFixed(2) + 'px');
         
-        this.mainImage.style.setProperty('--shadow-x-2', `${(translateX * 0.6).toFixed(2)}px`);
-        this.mainImage.style.setProperty('--shadow-y-2', `${(18 + translateY * 0.6).toFixed(2)}px`);
+        // Batch all shadow property updates
+        this.mainImage.style.setProperty('--shadow-x-1', shadowXValues[0]);
+        this.mainImage.style.setProperty('--shadow-y-1', shadowYValues[0]);
+        this.mainImage.style.setProperty('--shadow-x-2', shadowXValues[1]);
+        this.mainImage.style.setProperty('--shadow-y-2', shadowYValues[1]);
+        this.mainImage.style.setProperty('--shadow-x-3', shadowXValues[2]);
+        this.mainImage.style.setProperty('--shadow-y-3', shadowYValues[2]);
         
-        this.mainImage.style.setProperty('--shadow-x-3', `${translateX.toFixed(2)}px`);
-        this.mainImage.style.setProperty('--shadow-y-3', `${(36 + translateY).toFixed(2)}px`);
-        
-        // Update grain renderer if available
+        // Update grain renderer if available - use pre-computed values
         if (this.grainRenderer && this.settings.grainEnabled) {
             this.grainRenderer.updateShadowOffsets({
-                offset1: [translateX * 0.3, 6 + translateY * 0.3],
-                offset2: [translateX * 0.6, 18 + translateY * 0.6],
-                offset3: [translateX, 36 + translateY]
+                offset1: [translateX * this.shadowMultipliers[0], this.shadowBaseOffsets[0] + translateY * this.shadowMultipliers[0]],
+                offset2: [translateX * this.shadowMultipliers[1], this.shadowBaseOffsets[1] + translateY * this.shadowMultipliers[1]],
+                offset3: [translateX * this.shadowMultipliers[2], this.shadowBaseOffsets[2] + translateY * this.shadowMultipliers[2]]
             });
         }
         
@@ -914,8 +952,8 @@ class SimpleCardSystem {
     }
     
     resetToNeutral() {
-        const scale = this.settings.duplicateScale / 100;
-        const opacity = this.settings.duplicateOpacity / 100;
+        const scale = this.duplicateScaleFactor;
+        const opacity = this.duplicateOpacityFactor;
         
         // Reset all transforms using manual rotation settings (not 0°)
         const neutralBaseTransform = `rotateX(${this.settings.maxTiltX}deg) rotateY(${this.settings.maxTiltY}deg)`;
@@ -929,6 +967,12 @@ class SimpleCardSystem {
         this.duplicateImage.style.transform = neutralDuplicateTransform;
         this.duplicateImage.style.opacity = opacity.toFixed(3);
         this.duplicateImage.style.filter = `blur(${this.settings.duplicateBlur}px)`;
+        
+        // Reset cached transform values
+        this.lastRotX = this.settings.maxTiltX;
+        this.lastRotY = this.settings.maxTiltY;
+        this.lastTranslateX = 0;
+        this.lastTranslateY = 0;
         
         this.resetBoxShadows();
     }
@@ -1081,6 +1125,13 @@ class SimpleCardSystem {
             const value = parseInt(e.target.value);
             display.textContent = value;
             this.settings[settingName] = value;
+            
+            // Update cached computed values when relevant settings change
+            if (settingName === 'duplicateScale') {
+                this.duplicateScaleFactor = value / 100;
+            } else if (settingName === 'duplicateOpacity') {
+                this.duplicateOpacityFactor = value / 100;
+            }
             
             if (!this.settings.motionEnabled) {
                 this.resetToNeutral();
