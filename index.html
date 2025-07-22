@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simplified 3D Card Prototype</title>
+    <title>3D Card Prototype</title>
     <style>
         
         * {
@@ -294,13 +294,37 @@
             <input type="range" id="grainOpacity" min="0.0" max="1.0" value="0.3" step="0.05">
         </div>
 
-        <h4>Effects</h4>
+        <h4>Shadows</h4>
 
         <div class="control-group checkbox">
             <label>
                 <input type="checkbox" id="svgShadowsToggle" checked> 
-                Shadows
+                Visible
             </label>
+        </div>
+
+        <div class="control-group">
+            <div class="heading">
+                <label for="shadowOpacity">Shadows Opacity</label>
+                <span><span id="shadowOpacityValue">100</span>%</span>
+            </div>
+            <input type="range" id="shadowOpacity" min="0" max="200" value="100" step="5">
+        </div>
+
+        <div class="control-group">
+            <div class="heading">
+                <label for="shadowOffset">Shadows Offset</label>
+                <span><span id="shadowOffsetValue">100</span>%</span>
+            </div>
+            <input type="range" id="shadowOffset" min="0" max="200" value="100" step="5">
+        </div>
+
+        <div class="control-group">
+            <div class="heading">
+                <label for="shadowBlur">Shadows Blur</label>
+                <span><span id="shadowBlurValue">100</span>%</span>
+            </div>
+            <input type="range" id="shadowBlur" min="0" max="200" value="100" step="5">
         </div>
     </div>
 
@@ -711,6 +735,9 @@ class SimpleCardSystem {
         this.settings = {
             motionEnabled: true,
             shadowsEnabled: true,
+            shadowOpacity: 100,
+            shadowOffset: 100,
+            shadowBlur: 100,
             grainEnabled: true,
             grainScale: 0.03,
             grainIntensity: 1,
@@ -901,7 +928,8 @@ class SimpleCardSystem {
         
         // Phase 2: Use pre-computed constants and batch DOM updates
         const shadowXValues = this.shadowMultipliers.map(mult => (translateX * mult).toFixed(2) + 'px');
-        const shadowYValues = this.shadowMultipliers.map((mult, i) => (this.shadowBaseOffsets[i] + translateY * mult).toFixed(2) + 'px');
+        const adjustedBaseOffsets = this.shadowBaseOffsets.map(offset => offset * (this.settings.shadowOffset / 100));
+        const shadowYValues = this.shadowMultipliers.map((mult, i) => (adjustedBaseOffsets[i] + translateY * mult).toFixed(2) + 'px');
         
         // Batch all shadow property updates
         this.mainImage.style.setProperty('--shadow-x-1', shadowXValues[0]);
@@ -914,9 +942,9 @@ class SimpleCardSystem {
         // Update grain renderer if available - use pre-computed values
         if (this.grainRenderer && this.settings.grainEnabled) {
             this.grainRenderer.updateShadowOffsets({
-                offset1: [translateX * this.shadowMultipliers[0], this.shadowBaseOffsets[0] + translateY * this.shadowMultipliers[0]],
-                offset2: [translateX * this.shadowMultipliers[1], this.shadowBaseOffsets[1] + translateY * this.shadowMultipliers[1]],
-                offset3: [translateX * this.shadowMultipliers[2], this.shadowBaseOffsets[2] + translateY * this.shadowMultipliers[2]]
+                offset1: [translateX * this.shadowMultipliers[0], adjustedBaseOffsets[0] + translateY * this.shadowMultipliers[0]],
+                offset2: [translateX * this.shadowMultipliers[1], adjustedBaseOffsets[1] + translateY * this.shadowMultipliers[1]],
+                offset3: [translateX * this.shadowMultipliers[2], adjustedBaseOffsets[2] + translateY * this.shadowMultipliers[2]]
             });
         }
         
@@ -958,21 +986,28 @@ class SimpleCardSystem {
     
     
     resetBoxShadows() {
+        const adjustedBaseOffsets = this.shadowBaseOffsets.map(offset => offset * (this.settings.shadowOffset / 100));
+        
         this.mainImage.style.setProperty('--shadow-x-1', '0px');
-        this.mainImage.style.setProperty('--shadow-y-1', '6px');
+        this.mainImage.style.setProperty('--shadow-y-1', adjustedBaseOffsets[0].toFixed(2) + 'px');
         
         this.mainImage.style.setProperty('--shadow-x-2', '0px');
-        this.mainImage.style.setProperty('--shadow-y-2', '18px');
+        this.mainImage.style.setProperty('--shadow-y-2', adjustedBaseOffsets[1].toFixed(2) + 'px');
         
         this.mainImage.style.setProperty('--shadow-x-3', '0px');
-        this.mainImage.style.setProperty('--shadow-y-3', '36px');
+        this.mainImage.style.setProperty('--shadow-y-3', adjustedBaseOffsets[2].toFixed(2) + 'px');
         
-        // Reset main shadows only
+        // Reset main shadows with dynamic opacity and blur
         if (this.settings.shadowsEnabled) {
+            const opacityMultiplier = this.settings.shadowOpacity / 100;
+            const blurMultiplier = this.settings.shadowBlur / 100;
+            const baseOpacities = [0.04, 0.08, 0.16];
+            const baseBlurs = [8, 24, 48];
+            
             this.mainImage.style.boxShadow = `
-                var(--shadow-x-1, 0px) var(--shadow-y-1, 6px) 8px rgba(0,0,0,0.04),
-                var(--shadow-x-2, 0px) var(--shadow-y-2, 18px) 24px rgba(0,0,0,0.08),
-                var(--shadow-x-3, 0px) var(--shadow-y-3, 36px) 48px rgba(0,0,0,0.16)`;
+                var(--shadow-x-1, 0px) var(--shadow-y-1, ${adjustedBaseOffsets[0]}px) ${(baseBlurs[0] * blurMultiplier).toFixed(1)}px rgba(0,0,0,${(baseOpacities[0] * opacityMultiplier).toFixed(3)}),
+                var(--shadow-x-2, 0px) var(--shadow-y-2, ${adjustedBaseOffsets[1]}px) ${(baseBlurs[1] * blurMultiplier).toFixed(1)}px rgba(0,0,0,${(baseOpacities[1] * opacityMultiplier).toFixed(3)}),
+                var(--shadow-x-3, 0px) var(--shadow-y-3, ${adjustedBaseOffsets[2]}px) ${(baseBlurs[2] * blurMultiplier).toFixed(1)}px rgba(0,0,0,${(baseOpacities[2] * opacityMultiplier).toFixed(3)})`;
         }
     }
     
@@ -981,18 +1016,11 @@ class SimpleCardSystem {
         this.settings.shadowsEnabled = enabled;
         
         if (enabled) {
-            // Enable box-shadow on main card
-            this.mainImage.style.boxShadow = `
-                var(--shadow-x-1, 0px) var(--shadow-y-1, 6px) 8px rgba(0,0,0,0.04),
-                var(--shadow-x-2, 0px) var(--shadow-y-2, 18px) 24px rgba(0,0,0,0.08),
-                var(--shadow-x-3, 0px) var(--shadow-y-3, 36px) 48px rgba(0,0,0,0.16)`;
+            // Use resetBoxShadows to apply current shadow settings
+            this.resetBoxShadows();
         } else {
             // Disable shadows
             this.mainImage.style.boxShadow = 'none';
-        }
-        
-        if (!enabled) {
-            this.resetBoxShadows();
         }
     }
     
@@ -1087,6 +1115,9 @@ class SimpleCardSystem {
         this.attachSliderListener('duplicateBlur', 'duplicateBlur');
         this.attachSliderListener('rotationX', 'maxTiltX');
         this.attachSliderListener('rotationY', 'maxTiltY');
+        this.attachSliderListener('shadowOpacity', 'shadowOpacity');
+        this.attachSliderListener('shadowOffset', 'shadowOffset');
+        this.attachSliderListener('shadowBlur', 'shadowBlur');
         this.attachGrainSliderListener('grainScale', 'grainScale');
         this.attachGrainSliderListener('grainIntensity', 'grainIntensity');
         this.attachGrainSliderListener('grainBias', 'grainBias');
@@ -1111,6 +1142,11 @@ class SimpleCardSystem {
                 this.duplicateOpacityFactor = value / 100;
                 // Update CSS variable immediately for real-time feedback
                 this.duplicateImage.style.setProperty('--opacity', (value / 100).toFixed(3));
+            } else if (settingName === 'shadowOpacity' || settingName === 'shadowOffset' || settingName === 'shadowBlur') {
+                // Update shadows immediately for real-time feedback
+                if (this.settings.shadowsEnabled) {
+                    this.resetBoxShadows();
+                }
             }
             
             if (!this.settings.motionEnabled) {
