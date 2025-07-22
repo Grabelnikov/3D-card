@@ -177,6 +177,52 @@
             margin: 16px 0px;
         }
 
+        /* SHINE EFFECT - Dynamic light reflection that follows mouse position */
+        .shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Fallback: 5-stop gradient matching JavaScript structure */
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.2) 0%, 
+                rgba(255,255,255,0.15) 15%, 
+                rgba(255,255,255,0.1) 30%, 
+                rgba(255,255,255,0.05) 45%, 
+                rgba(255,255,255,0) 60%);
+            border-radius: 32px;
+            pointer-events: none;
+            opacity: 0; /* Hidden by default, shown based on mouse distance */
+            transition: opacity 0.3s ease-out;
+        }
+
+        .shine.active {
+            opacity: 1; /* Visible when mouse is in active zone */
+        }
+
+        /* EDGE INNER SHADOW - Dynamic inset shadows that follow mouse position */
+        .edge-inner-shadow {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0px;
+            opacity: var(--inner-shadow-opacity, 0.5);
+            /* Dynamic inset shadows using CSS variables updated by JavaScript */
+            box-shadow: 
+                0 0 0px white, 
+                inset var(--inner-light-x, 1px) var(--inner-light-y, 1px) 2px white, 
+                inset var(--inner-dark-x, -1px) var(--inner-dark-y, -1px) 2px black, 
+                inset var(--inner-shadow-light-x, -8px) var(--inner-shadow-light-y, -7px) 10px transparent, 
+                inset var(--inner-shadow-dark-x, 4px) var(--inner-shadow-dark-y, 7px) 10px transparent;
+            width: 100%;
+            mix-blend-mode: screen;
+            height: 100%;
+            border-radius: 33px;
+            z-index: -1;
+            transition: box-shadow 0.3s ease-out;
+        }
+
     </style>
 </head>
 <body>
@@ -187,6 +233,48 @@
             <input type="file" id="imageUpload" accept="image/png,image/jpeg" style="width: 100%; margin-bottom: 8px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
             <button id="resetImage" style="width: 100%; padding: 6px 12px; background: transparent; color: #222; border: 1px solid #222; border-radius: 4px; cursor: pointer; font-size: 12px;">Remove Image</button>
             <div id="uploadStatus" style="margin-top: 8px; font-size: 11px; color: #666;"></div>
+        </div>
+
+        <h4>Effects</h4>
+        <!-- Master toggle for both shine and inner shadow effects -->
+        <div class="control-group checkbox">
+            <label>
+                <input type="checkbox" id="shineToggle" checked> 
+                Visible
+            </label>
+        </div>
+        
+        <!-- Shine brightness control (0-100%) -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>Shine Intensity</span>
+                <span><span id="shineIntensityValue">33</span>%</span>
+            </div>
+            <input type="range" id="shineIntensity" min="0" max="100" value="33" step="1">
+        </div>
+        
+        <!-- Inner shadow opacity control (0-100%) -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>Inner Shadow Opacity</span>
+                <span><span id="innerShadowOpacityValue">50</span>%</span>
+            </div>
+            <input type="range" id="innerShadowOpacity" min="0" max="100" value="50" step="1">
+        </div>
+        
+        <!-- Toggle: light appears where mouse is vs opposite corner -->
+        <div class="control-group checkbox">
+            <label>
+                <input type="checkbox" id="invertEffects" checked> 
+                Follows cursor
+            </label>
+        </div>
+        <!-- Makes shine and shadow appear in different corners -->
+        <div class="control-group checkbox">
+            <label>
+                <input type="checkbox" id="oppositeCorners" checked> 
+                Opposite Corners
+            </label>
         </div>
 
         <h4>Card</h4>
@@ -340,6 +428,8 @@
                                    display: block;"></canvas>
                     <div class="duplicate-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
                     <div class="centered-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                        <div class="shine"></div>
+                        <div class="edge-inner-shadow"></div>
                     </div>
                 </div>                 
             </div>
@@ -767,6 +857,12 @@ class SimpleCardSystem {
             grainIntensity: 1,
             grainBias: 0,
             grainOpacity: 0.3,
+            shineEnabled: true,
+            effectsVisible: true, // Controls both shine and inner shadow visibility
+            shineIntensity: 33, // 0-100, maps to 0.0-0.6 internally (33% = current 0.2)
+            innerShadowOpacity: 50, // 0-100, maps to 0.0-1.0 internally (50% = current 0.5)
+            invertEffects: true,
+            oppositeCorners: true,
             duplicateVisible: true,
             duplicateScale: 100,
             duplicateOpacity: 70,
@@ -779,6 +875,13 @@ class SimpleCardSystem {
         this.container = document.querySelector('.image-container');
         this.mainImage = this.container.querySelector('.centered-image');
         this.duplicateImage = this.container.querySelector('.duplicate-image');
+        this.shine = this.mainImage.querySelector('.shine');
+        this.edgeInnerShadow = this.container.querySelector('.edge-inner-shadow');
+        
+        // Pre-calculated direction multipliers for performance
+        this.shineDirection = -1;  // Default: opposite to mouse
+        this.shadowDirection = -1; // Default: opposite to mouse
+        
         this.grainCanvas = null;
         this.grainRenderer = null;
         this.maxDuplicateOffset = 15;
@@ -817,6 +920,8 @@ class SimpleCardSystem {
         this.attachEventListeners();
         this.toggleShadows(this.settings.shadowsEnabled);
         this.toggleGrain(this.settings.grainEnabled);
+        this.toggleShine(this.settings.effectsVisible); // Use effectsVisible instead of shineEnabled
+        this.updateDirections();
     }
     
     initializeGrainCanvas() {
@@ -923,6 +1028,16 @@ class SimpleCardSystem {
         
         this.applyTransforms(rotX, rotY, translateX, translateY, opacity);
         
+        // EDGE INNER SHADOW UPDATE
+        if (this.settings.effectsVisible) {
+            this.updateInnerShadow(normalizedX, normalizedY);
+        }
+        
+        // SHINE UPDATE
+        if (this.settings.effectsVisible && this.settings.shineEnabled) {
+            this.updateShine(event, bounds, rotX, rotY);
+        }
+        
         this.container.classList.remove('mouse-leave');
     }
     
@@ -995,9 +1110,129 @@ class SimpleCardSystem {
         this.lastShadowY = translateY;
     }
     
+    // SHINE UPDATE METHOD - Distance-based visibility with INVERTED positioning
+    updateShine(event, bounds, rotX, rotY) {
+        if (!this.shine) return; // Safety check
+        
+        const centerX = bounds.left + bounds.width / 2;
+        const centerY = bounds.top + bounds.height / 2;
+        
+        const dx = event.clientX - centerX;
+        const dy = event.clientY - centerY;
+        
+        // Calculate distance from center
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDistance = Math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height) / 2;
+        const normalizedDistance = Math.min(distance / maxDistance, 1);
+        
+        // Create dead zone in center where shine is minimal/invisible
+        const deadZoneRadius = 0.3; // 30% of max distance = no shine zone
+        const fadeZoneRadius = 0.8; // 80% of max distance = full shine starts
+        
+        let shineVisibility;
+        if (normalizedDistance < deadZoneRadius) {
+            // Dead zone: no shine
+            shineVisibility = 0;
+        } else if (normalizedDistance < fadeZoneRadius) {
+            // Fade zone: gradual increase
+            const fadeProgress = (normalizedDistance - deadZoneRadius) / (fadeZoneRadius - deadZoneRadius);
+            shineVisibility = fadeProgress * 0.3; // Max 30% opacity in fade zone
+        } else {
+            // Active zone: full shine with distance-based intensity
+            const activeProgress = (normalizedDistance - fadeZoneRadius) / (1 - fadeZoneRadius);
+            shineVisibility = 0.3 + (activeProgress * 0.7); // 30% to 100% opacity
+        }
+        
+        // Only proceed if shine should be visible
+        if (shineVisibility <= 0) {
+            this.shine.style.opacity = '0';
+            this.shine.classList.remove('active');
+            return;
+        }
+        
+        // Visual: Calculate light reflection angle based on mouse position
+        // shineDirection = 1: light follows mouse | -1: light appears opposite corner
+        const finalDx = dx * this.shineDirection;
+        const finalDy = dy * this.shineDirection;
+        
+        let angle = Math.atan2(finalDy, finalDx) * (180 / Math.PI);
+        if (angle < 0) angle += 360;
+        
+        const gradientAngle = angle - 90;
+        
+        // Adjust gradient angle for 3D rotation to prevent artifacts
+        const adjustedAngle = gradientAngle - (rotY * 0.5) + (rotX * 0.3);
+        
+        // Dynamic shine intensity from slider (0-100% → 0.0-0.6 range)
+        const shineIntensity = this.settings.shineIntensity / 100 * 0.6;
+        const rotationBoost = Math.abs(rotX) + Math.abs(rotY); // Boost intensity when card is tilted
+        const rotationMultiplier = 1 + (rotationBoost * 0.05); // 5% boost per degree of tilt
+        
+        const finalIntensity = shineIntensity * shineVisibility * rotationMultiplier;
+        
+        // Create smooth 5-stop gradient with linear fade (matches CSS fallback)
+        const gradient = `linear-gradient(${adjustedAngle}deg, 
+            rgba(255,255,255,${finalIntensity * 1.0}) 0%, 
+            rgba(255,255,255,${finalIntensity * 0.75}) 15%, 
+            rgba(255,255,255,${finalIntensity * 0.5}) 30%, 
+            rgba(255,255,255,${finalIntensity * 0.25}) 45%, 
+            rgba(255,255,255,0) 60%)`;
+        
+        this.shine.style.background = gradient;
+        this.shine.style.opacity = shineVisibility.toFixed(3);
+        this.shine.classList.add('active');
+    }
+
+    // EDGE INNER SHADOW UPDATE METHOD - INVERTED positioning to match shine
+    updateInnerShadow(normalizedX, normalizedY) {
+        if (!this.container) return;
+        
+        const overlay = this.container.querySelector('.edge-inner-shadow');
+        if (!overlay) return;
+        
+        // Calculate shadow positions based on invert and opposite corners settings
+        const lightIntensity = 2; // Adjust for stronger/weaker effect
+        const shadowIntensity = 12; // Adjust for stronger/weaker large shadows
+        
+        // Visual: Create depth illusion through directional inner shadows
+        // direction = 1: shadows follow mouse | -1: shadows appear opposite to mouse
+        const direction = this.shadowDirection;
+        
+        // Apply positioning logic using consistent direction system
+        // Small highlight shadows (opposite to main shadow direction) 
+        const lightX = -normalizedX * lightIntensity * direction;
+        const lightY = -normalizedY * lightIntensity * direction;
+        
+        // Small dark shadows (same as main shadow direction)
+        const darkX = normalizedX * lightIntensity * direction;
+        const darkY = normalizedY * lightIntensity * direction;
+        
+        // Larger soft shadows with base offsets
+        const shadowLightX = -normalizedX * shadowIntensity * direction - 8 * direction;
+        const shadowLightY = -normalizedY * shadowIntensity * direction - 7 * direction;
+        const shadowDarkX = normalizedX * shadowIntensity * direction + 4 * direction;
+        const shadowDarkY = normalizedY * shadowIntensity * direction + 4 * direction;
+        
+        // Apply CSS variables to update edge inner shadow
+        overlay.style.setProperty('--inner-light-x', `${lightX.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-light-y', `${lightY.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-dark-x', `${darkX.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-dark-y', `${darkY.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-shadow-light-x', `${shadowLightX.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-shadow-light-y', `${shadowLightY.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-shadow-dark-x', `${shadowDarkX.toFixed(1)}px`);
+        overlay.style.setProperty('--inner-shadow-dark-y', `${shadowDarkY.toFixed(1)}px`);
+    }
+    
     handleMouseLeave() {
         this.container.classList.add('mouse-leave');
         this.resetToNeutral();
+        
+        // SHINE RESET
+        if (this.shine && this.settings.shineEnabled) {
+            this.shine.style.opacity = '0';
+            this.shine.classList.remove('active');
+        }
     }
     
     resetToNeutral() {
@@ -1022,6 +1257,9 @@ class SimpleCardSystem {
         this.lastRotY = 0;
         this.lastTranslateX = 0;
         this.lastTranslateY = 0;
+        
+        // EDGE INNER SHADOW RESET
+        this.resetInnerShadow();
         
         this.resetBoxShadows();
     }
@@ -1053,6 +1291,21 @@ class SimpleCardSystem {
         }
     }
     
+    // EDGE INNER SHADOW RESET METHOD
+    resetInnerShadow() {
+        const overlay = this.container?.querySelector('.edge-inner-shadow');
+        if (!overlay) return;
+        
+        // Reset to default values
+        overlay.style.setProperty('--inner-light-x', '1px');
+        overlay.style.setProperty('--inner-light-y', '1px');
+        overlay.style.setProperty('--inner-dark-x', '-1px');
+        overlay.style.setProperty('--inner-dark-y', '-1px');
+        overlay.style.setProperty('--inner-shadow-light-x', '-8px');
+        overlay.style.setProperty('--inner-shadow-light-y', '-7px');
+        overlay.style.setProperty('--inner-shadow-dark-x', '4px');
+        overlay.style.setProperty('--inner-shadow-dark-y', '4px');
+    }
     
     toggleShadows(enabled) {
         this.settings.shadowsEnabled = enabled;
@@ -1075,6 +1328,30 @@ class SimpleCardSystem {
                 this.grainRenderer.render();
             } else {
                 this.grainCanvas.style.display = 'none';
+            }
+        }
+    }
+    
+    // SHINE TOGGLE METHOD
+    toggleShine(enabled) {
+        this.settings.effectsVisible = enabled;
+        this.settings.shineEnabled = enabled; // Keep for backward compatibility
+        
+        // Control SHINE visibility
+        if (!enabled && this.shine) {
+            this.shine.style.opacity = '0';
+            this.shine.classList.remove('active');
+        }
+        
+        // Control INNER SHADOW visibility
+        if (this.edgeInnerShadow) {
+            if (enabled) {
+                // Restore inner shadow opacity from setting
+                const opacity = this.settings.innerShadowOpacity / 100;
+                this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', opacity.toFixed(3));
+            } else {
+                // Hide inner shadow completely
+                this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', '0');
             }
         }
     }
@@ -1103,12 +1380,33 @@ class SimpleCardSystem {
         }
     }
     
+    // DIRECTION HELPERS: Calculate where light effects appear
+    // Visual: Returns 1 when light follows mouse, -1 when light appears opposite to mouse
+    getShineDirection() {
+        return this.settings.invertEffects ? 1 : -1;
+    }
+    
+    // Visual: Shadow direction creates contrast with shine in "Opposite Corners" mode
+    // Normal: both effects opposite to mouse | Inverted: both follow mouse 
+    // Opposite Corners: one follows mouse, other appears opposite
+    getShadowDirection() {
+        const baseDirection = this.settings.invertEffects ? 1 : -1;
+        return this.settings.oppositeCorners ? -baseDirection : baseDirection;
+    }
+    
+    // Update pre-calculated direction multipliers when settings change
+    updateDirections() {
+        this.shineDirection = this.getShineDirection();
+        this.shadowDirection = this.getShadowDirection();
+    }
+    
     toggleRotationControls(enabled) {
         const rotationControls = document.querySelectorAll('.rotation-control');
         rotationControls.forEach(control => {
             control.classList.toggle('disabled', !enabled);
         });
     }
+    
     
     initializeControls() {
         // Motion toggle
@@ -1150,6 +1448,32 @@ class SimpleCardSystem {
             });
         }
 
+        // Shine toggle
+        const shineToggle = document.getElementById('shineToggle');
+        if (shineToggle) {
+            shineToggle.addEventListener('change', (e) => {
+                this.toggleShine(e.target.checked);
+            });
+        }
+
+        // Invert effects toggle
+        const invertEffects = document.getElementById('invertEffects');
+        if (invertEffects) {
+            invertEffects.addEventListener('change', (e) => {
+                this.settings.invertEffects = e.target.checked;
+                this.updateDirections();
+            });
+        }
+
+        // Opposite corners toggle
+        const oppositeCorners = document.getElementById('oppositeCorners');
+        if (oppositeCorners) {
+            oppositeCorners.addEventListener('change', (e) => {
+                this.settings.oppositeCorners = e.target.checked;
+                this.updateDirections();
+            });
+        }
+
         // Slider controls
         this.attachSliderListener('duplicateScale', 'duplicateScale');
         this.attachSliderListener('duplicateOpacity', 'duplicateOpacity');
@@ -1160,6 +1484,8 @@ class SimpleCardSystem {
         this.attachSliderListener('shadowOpacity', 'shadowOpacity');
         this.attachSliderListener('shadowOffset', 'shadowOffset');
         this.attachSliderListener('shadowBlur', 'shadowBlur');
+        this.attachSliderListener('shineIntensity', 'shineIntensity');
+        this.attachSliderListener('innerShadowOpacity', 'innerShadowOpacity');
         this.attachGrainSliderListener('grainScale', 'grainScale');
         this.attachGrainSliderListener('grainIntensity', 'grainIntensity');
         this.attachGrainSliderListener('grainBias', 'grainBias');
@@ -1188,6 +1514,12 @@ class SimpleCardSystem {
                 // Update shadows immediately for real-time feedback
                 if (this.settings.shadowsEnabled) {
                     this.resetBoxShadows();
+                }
+            } else if (settingName === 'innerShadowOpacity') {
+                // Update inner shadow opacity CSS variable immediately for real-time feedback
+                const opacity = value / 100; // Convert 0-100 to 0.0-1.0
+                if (this.edgeInnerShadow) {
+                    this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', opacity.toFixed(3));
                 }
             }
             
