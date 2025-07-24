@@ -81,8 +81,10 @@
             transform: rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg)) translateZ(0px);
             transform-origin: 50% 50%;
             transform-style: preserve-3d;
-            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-position 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             backface-visibility: hidden;
+            background-position: 50% 50%;
+            will-change: transform, background-position;
             box-shadow: 
                 var(--shadow-x-1, 0px) var(--shadow-y-1, 6px) 8px rgba(0,0,0,0.04),
                 var(--shadow-x-2, 0px) var(--shadow-y-2, 18px) 24px rgba(0,0,0,0.08),
@@ -277,6 +279,22 @@
             </label>
         </div>
 
+        <h4>Parallax</h4>
+        <div class="control-group checkbox">
+            <label>
+                <input type="checkbox" id="parallaxToggle" checked> 
+                Background Parallax
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <div class="heading">
+                <label for="parallaxIntensity">Intensity</label>
+                <span><span id="parallaxIntensityValue">2</span>%</span>
+            </div>
+            <input type="range" id="parallaxIntensity" min="0" max="10" value="2" step="1">
+        </div>
+
         <h4>Card</h4>
         <div class="control-group checkbox">
             <label>
@@ -290,7 +308,7 @@
                 <label for="rotationX">X Rotation</label>
                 <span><span id="rotationXValue">4</span>°</span>
             </div>
-            <input type="range" id="rotationX" min="0" max="45" value="4" step="1">
+            <input type="range" id="rotationX" min="0" max="20" value="4" step="1">
         </div>
         
         <div class="control-group rotation-control">
@@ -298,7 +316,7 @@
                 <label for="rotationY">Y Rotation</label>
                 <span><span id="rotationYValue">4</span>°</span>
             </div>
-            <input type="range" id="rotationY" min="0" max="45" value="4" step="1">
+            <input type="range" id="rotationY" min="0" max="20" value="4" step="1">
         </div>
 
         <h4>Duplicate</h4>
@@ -426,8 +444,8 @@
                                    transform-origin: 50% 50%;
                                    backface-visibility: hidden;
                                    display: block;"></canvas>
-                    <div class="duplicate-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
-                    <div class="centered-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                    <div class="duplicate-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;"></div>
+                    <div class="centered-image" style="background: url('./assets/sofa.jpg'), linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;">
                         <div class="shine"></div>
                         <div class="edge-inner-shadow"></div>
                     </div>
@@ -703,9 +721,30 @@ class ImageUploadHandler {
         this.cardSystem = cardSystem;
         this.defaultGradient = 'linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%)';
         this.currentImageUrl = null;
+        this.currentImageDimensions = null;
         this.maxSize = 5 * 1024 * 1024; // 5MB  
         this.maxDimension = 2000; // Balanced for performance and quality
         this.statusElement = document.getElementById('uploadStatus');
+    }
+    
+    calculateParallaxBackgroundSize(imageW, imageH) {
+        // Get actual card dimensions dynamically
+        const containerW = this.cardSystem.mainImage.offsetWidth;
+        const containerH = this.cardSystem.mainImage.offsetHeight;
+        
+        // Calculate scale factor (same as background-size: cover)
+        const scaleX = containerW / imageW;
+        const scaleY = containerH / imageH;
+        const coverScale = Math.max(scaleX, scaleY);
+        
+        // Apply cover scale + 15% overflow for parallax
+        const finalScale = coverScale * 1.15;
+        
+        // Return exact pixel dimensions
+        const finalW = Math.round(imageW * finalScale);
+        const finalH = Math.round(imageH * finalScale);
+        
+        return `${finalW}px ${finalH}px`;
     }
     
     validateFile(file) {
@@ -743,6 +782,7 @@ class ImageUploadHandler {
                         }
                         
                         this.currentImageUrl = e.target.result;
+                        this.currentImageDimensions = { width: img.width, height: img.height };
                         this.applyImageBackground();
                         this.setStatus(`Image uploaded (${img.width}×${img.height})`, 'success');
                         this.updateRemoveButtonState();
@@ -768,6 +808,19 @@ class ImageUploadHandler {
         
         const bgStyle = `url(${this.currentImageUrl})`;
         
+        // Dynamic sizing based on parallax state
+        let bgSize;
+        if (this.cardSystem.settings.parallaxEnabled && this.currentImageDimensions) {
+            // Parallax ON: Calculate 115% overflow for parallax movement
+            bgSize = this.calculateParallaxBackgroundSize(
+                this.currentImageDimensions.width,
+                this.currentImageDimensions.height
+            );
+        } else {
+            // Parallax OFF: Use cover for optimal quality and performance
+            bgSize = 'cover';
+        }
+        
         // Apply to main card and duplicate only (exclude shadow emulator)
         if (this.cardSystem.mainImage) {
             this.cardSystem.mainImage.style.background = bgStyle;
@@ -781,17 +834,18 @@ class ImageUploadHandler {
             console.error('Duplicate image element not found');
         }
         
-        // Ensure cover/no-repeat styling
+        // Apply sizing and styling
         [this.cardSystem.mainImage, this.cardSystem.duplicateImage].filter(Boolean).forEach(el => {
-            el.style.backgroundSize = 'cover';
+            el.style.backgroundSize = bgSize;
             el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundPosition = 'center';
+            el.style.backgroundPosition = '50% 50%';
         });
     }
     
     resetToGradient() {
         if (this.currentImageUrl) {
             this.currentImageUrl = null;
+            this.currentImageDimensions = null;
         }
         
         // Restore gradient to main and duplicate cards
@@ -869,7 +923,9 @@ class SimpleCardSystem {
             duplicateYOffset: 18,
             duplicateBlur: 24,
             maxTiltX: 4,
-            maxTiltY: 4
+            maxTiltY: 4,
+            parallaxEnabled: true,
+            parallaxIntensity: 2
         };
         
         this.container = document.querySelector('.image-container');
@@ -943,6 +999,18 @@ class SimpleCardSystem {
     initializeImageUpload() {
         this.imageUploadHandler = new ImageUploadHandler(this);
         
+        // Load default image dimensions
+        const defaultImg = new Image();
+        defaultImg.onload = () => {
+            this.imageUploadHandler.defaultImageDimensions = {
+                width: defaultImg.width,
+                height: defaultImg.height
+            };
+            // Apply dynamic sizing to default image
+            this.updateDefaultImageSize();
+        };
+        defaultImg.src = './assets/sofa.jpg';
+        
         // File input event listener
         const fileInput = document.getElementById('imageUpload');
         if (fileInput) {
@@ -972,6 +1040,26 @@ class SimpleCardSystem {
         
         // Initialize button state based on current card background
         this.imageUploadHandler.updateRemoveButtonState();
+    }
+    
+    updateDefaultImageSize() {
+        // Dynamic sizing based on parallax state
+        let bgSize;
+        if (this.settings.parallaxEnabled && this.imageUploadHandler.defaultImageDimensions) {
+            // Parallax ON: Calculate 115% overflow for parallax movement
+            bgSize = this.imageUploadHandler.calculateParallaxBackgroundSize(
+                this.imageUploadHandler.defaultImageDimensions.width,
+                this.imageUploadHandler.defaultImageDimensions.height
+            );
+        } else {
+            // Parallax OFF: Use cover for optimal quality and performance
+            bgSize = 'cover';
+        }
+        
+        // Update both main and duplicate cards
+        [this.mainImage, this.duplicateImage].filter(Boolean).forEach(el => {
+            el.style.backgroundSize = bgSize;
+        });
     }
     
     attachEventListeners() {
@@ -1070,6 +1158,19 @@ class SimpleCardSystem {
             // Update opacity and blur regardless (dynamic based on distance)
             this.duplicateImage.style.setProperty('--opacity', opacity.toFixed(3));
             this.duplicateImage.style.filter = `blur(${this.settings.duplicateBlur}px)`;
+        }
+        
+        // Apply parallax effect to main card background
+        if (this.settings.parallaxEnabled) {
+            // Check if image exists (not just gradient)
+            const hasImage = this.mainImage.style.background.includes('url(');
+            
+            if (hasImage) {
+                const bgX = 50 - (rotY / this.settings.maxTiltY) * this.settings.parallaxIntensity;
+                const bgY = 50 + (rotX / this.settings.maxTiltX) * this.settings.parallaxIntensity;
+                
+                this.mainImage.style.backgroundPosition = `${bgX}% ${bgY}%`;
+            }
         }
         
         if (this.settings.shadowsEnabled && (rotChanged || translateChanged)) {
@@ -1260,6 +1361,11 @@ class SimpleCardSystem {
         
         // EDGE INNER SHADOW RESET
         this.resetInnerShadow();
+        
+        // Reset parallax background position
+        if (this.settings.parallaxEnabled) {
+            this.mainImage.style.backgroundPosition = '50% 50%';
+        }
         
         this.resetBoxShadows();
     }
@@ -1474,6 +1580,28 @@ class SimpleCardSystem {
             });
         }
 
+        // Parallax toggle
+        const parallaxToggle = document.getElementById('parallaxToggle');
+        if (parallaxToggle) {
+            parallaxToggle.addEventListener('change', (e) => {
+                this.settings.parallaxEnabled = e.target.checked;
+                
+                // Reapply background sizing based on new parallax state
+                if (this.imageUploadHandler.currentImageUrl) {
+                    // User uploaded image - reapply with new sizing
+                    this.imageUploadHandler.applyImageBackground();
+                } else {
+                    // Default image - update sizing
+                    this.updateDefaultImageSize();
+                }
+                
+                if (!e.target.checked) {
+                    // Reset background position when disabled
+                    this.mainImage.style.backgroundPosition = '50% 50%';
+                }
+            });
+        }
+
         // Slider controls
         this.attachSliderListener('duplicateScale', 'duplicateScale');
         this.attachSliderListener('duplicateOpacity', 'duplicateOpacity');
@@ -1486,6 +1614,7 @@ class SimpleCardSystem {
         this.attachSliderListener('shadowBlur', 'shadowBlur');
         this.attachSliderListener('shineIntensity', 'shineIntensity');
         this.attachSliderListener('innerShadowOpacity', 'innerShadowOpacity');
+        this.attachSliderListener('parallaxIntensity', 'parallaxIntensity');
         this.attachGrainSliderListener('grainScale', 'grainScale');
         this.attachGrainSliderListener('grainIntensity', 'grainIntensity');
         this.attachGrainSliderListener('grainBias', 'grainBias');

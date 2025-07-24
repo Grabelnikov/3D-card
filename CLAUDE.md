@@ -46,6 +46,8 @@ Interactive 3D card prototype demonstrating celebratory moment UI for Airbnb. Fe
 - Interactive motion toggle
 - Dynamic shine effect toggle
 - Manual rotation controls (X/Y axes)
+- Background parallax toggle and intensity control
+- Smart background sizing (cover vs parallax overflow)
 
 ### Future Control Considerations
 - Color bleeding intensity
@@ -208,6 +210,51 @@ reader.onload = (e) => {
 };
 ```
 
+### 3. Background Parallax (Priority: Completed)
+**Implementation**: CSS background-position manipulation with intelligent image sizing
+- Dynamic background positioning based on card tilt direction
+- Smart background sizing: cover (parallax off) vs calculated overflow (parallax on)
+- Automatic aspect ratio handling for any image size
+- Performance optimization through conditional sizing
+- Smooth transitions matching existing card animations
+
+**Controls added:**
+```javascript
+parallaxEnabled: true,     // Toggle parallax effect
+parallaxIntensity: 2      // 0-10% shift at max tilt (default 2%)
+```
+
+**Core Algorithm:**
+```javascript
+// Dynamic background sizing for parallax overflow
+calculateParallaxBackgroundSize(imageW, imageH) {
+    const containerW = this.cardSystem.mainImage.offsetWidth;
+    const containerH = this.cardSystem.mainImage.offsetHeight;
+    
+    // Calculate scale factor (same as background-size: cover)
+    const scaleX = containerW / imageW;
+    const scaleY = containerH / imageH;
+    const coverScale = Math.max(scaleX, scaleY);
+    
+    // Apply cover scale + 15% overflow for parallax
+    const finalScale = coverScale * 1.15;
+    
+    return `${Math.round(imageW * finalScale)}px ${Math.round(imageH * finalScale)}px`;
+}
+
+// Parallax positioning
+const bgX = 50 - (rotY / maxTiltY) * parallaxIntensity;
+const bgY = 50 + (rotX / maxTiltX) * parallaxIntensity;
+```
+
+**Key Implementation Notes:**
+- Background moves opposite to card tilt for natural depth perception
+- 15% overflow ensures movement range without revealing edges
+- Conditional sizing: cover (off) vs calculated (on) for optimal performance
+- Integrates seamlessly with existing mouse movement system
+- Works with default sofa.jpg and uploaded images
+- Rotation range limited to 0-20° for realistic interaction
+
 ## Implementation Guidelines
 
 ### For Grainy Shadow:
@@ -216,6 +263,13 @@ reader.onload = (e) => {
 3. Ensure shadow grain follows card rotation
 4. Keep grain subtle for professional appearance
 5. Test performance with all effects combined
+
+### For Background Parallax (Completed):
+1. Add parallax controls to sidebar following existing patterns
+2. Implement conditional background sizing for performance
+3. Ensure smooth integration with existing mouse movement
+4. Test with various image aspect ratios
+5. Validate 60fps performance with all effects enabled
 
 ### For Image Upload:
 1. Add file input to control panel
@@ -231,8 +285,9 @@ reader.onload = (e) => {
 - All new features must be toggleable
 
 ## Next Steps & Roadmap
-1. Implement grainy shadow with WebGL
-2. Add image upload functionality
+1. ~~Implement background parallax~~ ✅ **COMPLETED**
+2. Implement grainy shadow with WebGL
+3. Add image upload functionality
 
 ### Reference Files
 - `reference/grainy-shadow-reference.html` - Full WebGL grainy shadow implementation
