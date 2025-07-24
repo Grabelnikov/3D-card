@@ -725,12 +725,20 @@ class ImageUploadHandler {
         this.maxSize = 5 * 1024 * 1024; // 5MB  
         this.maxDimension = 2000; // Balanced for performance and quality
         this.statusElement = document.getElementById('uploadStatus');
+        // Background size calculation cache
+        this.backgroundSizeCache = new Map();
     }
     
     calculateParallaxBackgroundSize(imageW, imageH) {
-        // Get actual card dimensions dynamically
-        const containerW = this.cardSystem.mainImage.offsetWidth;
-        const containerH = this.cardSystem.mainImage.offsetHeight;
+        // Check cache first
+        const cacheKey = `${imageW}x${imageH}`;
+        if (this.backgroundSizeCache.has(cacheKey)) {
+            return this.backgroundSizeCache.get(cacheKey);
+        }
+        
+        // Use cached container dimensions instead of offsetWidth/Height
+        const containerW = this.cardSystem.containerDimensions.width;
+        const containerH = this.cardSystem.containerDimensions.height;
         
         // Calculate scale factor (same as background-size: cover)
         const scaleX = containerW / imageW;
@@ -744,7 +752,12 @@ class ImageUploadHandler {
         const finalW = Math.round(imageW * finalScale);
         const finalH = Math.round(imageH * finalScale);
         
-        return `${finalW}px ${finalH}px`;
+        const result = `${finalW}px ${finalH}px`;
+        
+        // Cache the result
+        this.backgroundSizeCache.set(cacheKey, result);
+        
+        return result;
     }
     
     validateFile(file) {
@@ -840,6 +853,9 @@ class ImageUploadHandler {
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundPosition = '50% 50%';
         });
+        
+        // Update cached image state after background change
+        this.cardSystem.updateImageState();
     }
     
     resetToGradient() {
@@ -858,6 +874,9 @@ class ImageUploadHandler {
         
         this.setStatus('Image removed', 'info');
         this.updateRemoveButtonState();
+        
+        // Update cached image state after background change
+        this.cardSystem.updateImageState();
         
         // Clear file input
         const fileInput = document.getElementById('imageUpload');
@@ -961,12 +980,35 @@ class SimpleCardSystem {
         this.lastTranslateY = 0;
         this.transformThreshold = 0.05;
         
+        // Parallax optimization caching
+        this.hasImageBackground = false;
+        this.parallaxFactorX = 0;
+        this.parallaxFactorY = 0;
+        this.containerDimensions = { width: 270, height: 400 };
+        
         
         // Cached computed values that change with settings
         this.duplicateScaleFactor = this.settings.duplicateScale / 100;
         this.duplicateOpacityFactor = this.settings.duplicateOpacity / 100;
         
         this.init();
+    }
+    
+    // Parallax optimization methods
+    updateImageState() {
+        this.hasImageBackground = this.mainImage.style.background.includes('url(');
+    }
+    
+    updateParallaxFactors() {
+        this.parallaxFactorX = this.settings.parallaxIntensity / this.settings.maxTiltX;
+        this.parallaxFactorY = this.settings.parallaxIntensity / this.settings.maxTiltY;
+    }
+    
+    updateContainerDimensions() {
+        this.containerDimensions = {
+            width: this.mainImage.offsetWidth,
+            height: this.mainImage.offsetHeight
+        };
     }
     
     init() {
@@ -978,6 +1020,11 @@ class SimpleCardSystem {
         this.toggleGrain(this.settings.grainEnabled);
         this.toggleShine(this.settings.effectsVisible); // Use effectsVisible instead of shineEnabled
         this.updateDirections();
+        
+        // Initialize optimization caches
+        this.updateImageState();
+        this.updateParallaxFactors();
+        this.updateContainerDimensions();
     }
     
     initializeGrainCanvas() {
@@ -1060,6 +1107,9 @@ class SimpleCardSystem {
         [this.mainImage, this.duplicateImage].filter(Boolean).forEach(el => {
             el.style.backgroundSize = bgSize;
         });
+        
+        // Update cached image state after background change
+        this.updateImageState();
     }
     
     attachEventListeners() {
@@ -1161,16 +1211,11 @@ class SimpleCardSystem {
         }
         
         // Apply parallax effect to main card background
-        if (this.settings.parallaxEnabled) {
-            // Check if image exists (not just gradient)
-            const hasImage = this.mainImage.style.background.includes('url(');
+        if (this.settings.parallaxEnabled && this.hasImageBackground) {
+            const bgX = 50 - rotY * this.parallaxFactorY;
+            const bgY = 50 + rotX * this.parallaxFactorX;
             
-            if (hasImage) {
-                const bgX = 50 - (rotY / this.settings.maxTiltY) * this.settings.parallaxIntensity;
-                const bgY = 50 + (rotX / this.settings.maxTiltX) * this.settings.parallaxIntensity;
-                
-                this.mainImage.style.backgroundPosition = `${bgX}% ${bgY}%`;
-            }
+            this.mainImage.style.backgroundPosition = `${bgX}% ${bgY}%`;
         }
         
         if (this.settings.shadowsEnabled && (rotChanged || translateChanged)) {
@@ -1586,6 +1631,10 @@ class SimpleCardSystem {
             parallaxToggle.addEventListener('change', (e) => {
                 this.settings.parallaxEnabled = e.target.checked;
                 
+                // Update parallax factors and clear background size cache
+                this.updateParallaxFactors();
+                this.imageUploadHandler.backgroundSizeCache.clear();
+                
                 // Reapply background sizing based on new parallax state
                 if (this.imageUploadHandler.currentImageUrl) {
                     // User uploaded image - reapply with new sizing
@@ -1650,6 +1699,9 @@ class SimpleCardSystem {
                 if (this.edgeInnerShadow) {
                     this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', opacity.toFixed(3));
                 }
+            } else if (settingName === 'parallaxIntensity' || settingName === 'maxTiltX' || settingName === 'maxTiltY') {
+                // Update parallax factors when intensity or tilt range changes
+                this.updateParallaxFactors();
             }
             
             if (!this.settings.motionEnabled) {
