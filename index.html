@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Card Prototype</title>
     <style>
+        :root {
+            --card-width: 270px;
+            --card-height: 400px;
+            --card-ratio: calc(var(--card-width) / var(--card-height));
+            --shine-mask-base: calc(min(var(--card-height), 50vmin) * 0.4);
+        }
         
         * {
             margin: 0;
@@ -49,7 +55,7 @@
 
         .image-container {
             text-align: center;
-            max-width: 270px;
+            max-width: var(--card-width);
             max-height: 500px;
             position: relative;
             transform-style: preserve-3d;
@@ -63,8 +69,8 @@
             border-radius: 32px;
             top: 0;
             left: 0;
-            width: 270px;
-            height: 400px;
+            width: var(--card-width);
+            height: var(--card-height);
             transform: var(--dup-transform, rotateX(0deg) rotateY(0deg) translateZ(-5px) scale(1) translate(0px, 0px));
             transform-origin: 50% 50%;
             filter: blur(var(--blur, 24px));
@@ -76,8 +82,8 @@
         .centered-image {
             border-radius: 32px;
             position: relative;
-            width: 270px;
-            height: 400px;
+            width: var(--card-width);
+            height: var(--card-height);
             transform: rotateX(var(--rot-x, 0deg)) rotateY(var(--rot-y, 0deg)) translateZ(0px);
             transform-origin: 50% 50%;
             transform-style: preserve-3d;
@@ -92,8 +98,8 @@
         }
 
         .image-wrapper {
-            width: 270px;
-            height: 400px;
+            width: var(--card-width);
+            height: var(--card-height);
             margin: 0;
             padding: 0;
             line-height: 0;
@@ -197,6 +203,30 @@
             pointer-events: none;
             opacity: 0; /* Hidden by default, shown based on mouse distance */
             transition: opacity 0.3s ease-out;
+            /* Performance optimizations */
+            will-change: opacity, background;
+            contain: layout style paint;
+            /* Blend mode for effects */
+            mix-blend-mode: var(--effects-blend-mode, normal);
+            /* Simplified elliptical mask with fixed values for debugging */
+            mask-image: radial-gradient(
+                ellipse 108px 160px at center, 
+                transparent 0px,        /* Start transparent */
+                transparent 32px,       /* Stay transparent to 32px */
+                rgba(0,0,0,0.1) 40px,   /* Very gradual start */
+                rgba(0,0,0,0.3) 60px,   /* Increase */
+                rgba(0,0,0,0.6) 80px,   /* More visible */
+                rgba(0,0,0,0.9) 120px,  /* Almost full */
+                black 160px);           /* Fully visible */
+            -webkit-mask-image: radial-gradient(
+                ellipse 108px 160px at center, 
+                transparent 0px,
+                transparent 32px,
+                rgba(0,0,0,0.1) 40px,
+                rgba(0,0,0,0.3) 60px,
+                rgba(0,0,0,0.6) 80px,
+                rgba(0,0,0,0.9) 120px,
+                black 160px);
         }
 
         .shine.active {
@@ -218,7 +248,7 @@
                 inset var(--inner-shadow-light-x, -8px) var(--inner-shadow-light-y, -7px) 10px transparent, 
                 inset var(--inner-shadow-dark-x, 4px) var(--inner-shadow-dark-y, 7px) 10px transparent;
             width: 100%;
-            mix-blend-mode: screen;
+            mix-blend-mode: var(--effects-blend-mode, normal);
             height: 100%;
             border-radius: 33px;
             z-index: -1;
@@ -277,6 +307,18 @@
                 <input type="checkbox" id="oppositeCorners"> 
                 Opposite Corners
             </label>
+        </div>
+        
+        <!-- Blend mode for both shine and inner shadow effects -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>Effects Blend Mode</span>
+            </div>
+            <select id="effectsBlendMode" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+                <option value="normal">Normal</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+            </select>
         </div>
 
         <h4>Parallax</h4>
@@ -944,7 +986,8 @@ class SimpleCardSystem {
             maxTiltX: 4,
             maxTiltY: 4,
             parallaxEnabled: true,
-            parallaxIntensity: 2
+            parallaxIntensity: 2,
+            effectsBlendMode: 'normal'
         };
         
         this.container = document.querySelector('.image-container');
@@ -1268,26 +1311,33 @@ class SimpleCardSystem {
         
         // Calculate distance from center
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const maxDistance = Math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height) / 2;
-        const normalizedDistance = Math.min(distance / maxDistance, 1);
         
-        // Create dead zone in center where shine is minimal/invisible
-        const deadZoneRadius = 0.3; // 30% of max distance = no shine zone
-        const fadeZoneRadius = 0.8; // 80% of max distance = full shine starts
+        // Calculate distance to card edge based on angle
+        const angle = Math.atan2(dy, dx);
+        const halfWidth = bounds.width / 2;
+        const halfHeight = bounds.height / 2;
         
-        let shineVisibility;
-        if (normalizedDistance < deadZoneRadius) {
-            // Dead zone: no shine
-            shineVisibility = 0;
-        } else if (normalizedDistance < fadeZoneRadius) {
-            // Fade zone: gradual increase
-            const fadeProgress = (normalizedDistance - deadZoneRadius) / (fadeZoneRadius - deadZoneRadius);
-            shineVisibility = fadeProgress * 0.3; // Max 30% opacity in fade zone
+        // Find intersection with card rectangle boundary
+        let maxDistance;
+        const absAngle = Math.abs(angle);
+        const halfPi = Math.PI / 2;
+        
+        if (absAngle <= Math.atan2(halfHeight, halfWidth)) {
+            // Intersects with left or right edge
+            maxDistance = Math.abs(halfWidth / Math.cos(angle));
+        } else if (absAngle >= Math.PI - Math.atan2(halfHeight, halfWidth)) {
+            // Intersects with left edge (negative x)
+            maxDistance = Math.abs(halfWidth / Math.cos(angle));
         } else {
-            // Active zone: full shine with distance-based intensity
-            const activeProgress = (normalizedDistance - fadeZoneRadius) / (1 - fadeZoneRadius);
-            shineVisibility = 0.3 + (activeProgress * 0.7); // 30% to 100% opacity
+            // Intersects with top or bottom edge
+            maxDistance = Math.abs(halfHeight / Math.sin(angle));
         }
+        
+        // Clamp normalized distance to 1.0 when outside card
+        const normalizedDistance = Math.min(distance / maxDistance, 1.0);
+        
+        // Simple quadratic intensity based on distance from edge (CSS mask handles center blocking)
+        const shineVisibility = Math.pow(normalizedDistance, 2);
         
         // Only proceed if shine should be visible
         if (shineVisibility <= 0) {
@@ -1301,10 +1351,10 @@ class SimpleCardSystem {
         const finalDx = dx * this.shineDirection;
         const finalDy = dy * this.shineDirection;
         
-        let angle = Math.atan2(finalDy, finalDx) * (180 / Math.PI);
-        if (angle < 0) angle += 360;
+        let gradAngle = Math.atan2(finalDy, finalDx) * (180 / Math.PI);
+        if (gradAngle < 0) gradAngle += 360;
         
-        const gradientAngle = angle - 90;
+        const gradientAngle = gradAngle - 90;
         
         // Adjust gradient angle for 3D rotation to prevent artifacts
         const adjustedAngle = gradientAngle - (rotY * 0.5) + (rotX * 0.3);
@@ -1664,6 +1714,7 @@ class SimpleCardSystem {
         this.attachSliderListener('shineIntensity', 'shineIntensity');
         this.attachSliderListener('innerShadowOpacity', 'innerShadowOpacity');
         this.attachSliderListener('parallaxIntensity', 'parallaxIntensity');
+        this.attachDropdownListener('effectsBlendMode', 'effectsBlendMode');
         this.attachGrainSliderListener('grainScale', 'grainScale');
         this.attachGrainSliderListener('grainIntensity', 'grainIntensity');
         this.attachGrainSliderListener('grainBias', 'grainBias');
@@ -1727,6 +1778,21 @@ class SimpleCardSystem {
             if (this.grainRenderer && this.settings.grainEnabled) {
                 this.grainRenderer.updateGrainSettings(this.settings);
             }
+        });
+    }
+    
+    attachDropdownListener(elementId, settingName) {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            console.warn('Dropdown not found:', elementId);
+            return;
+        }
+        
+        element.addEventListener('change', (e) => {
+            this.settings[settingName] = e.target.value;
+            // Apply to both shine and inner shadow elements
+            this.shine.style.setProperty('--effects-blend-mode', e.target.value);
+            this.edgeInnerShadow.style.setProperty('--effects-blend-mode', e.target.value);
         });
     }
     
