@@ -302,20 +302,17 @@
         .edge-inner-shadow {
             content: '';
             position: absolute;
-            top: -1px;
-            left: 0px;
-            opacity: var(--inner-shadow-opacity, 0.5);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             /* Dynamic inset shadows using CSS variables updated by JavaScript */
             box-shadow: 
                 0 0 0px white, 
-                inset var(--inner-light-x, 1px) var(--inner-light-y, 1px) 2px white, 
-                inset var(--inner-dark-x, -1px) var(--inner-dark-y, -1px) 2px black, 
-                inset var(--inner-shadow-light-x, -8px) var(--inner-shadow-light-y, -7px) 10px transparent, 
-                inset var(--inner-shadow-dark-x, 4px) var(--inner-shadow-dark-y, 7px) 10px transparent;
-            width: 100%;
+                inset var(--inner-light-x, 1px) var(--inner-light-y, 1px) 1px rgba(255, 255, 255, var(--inner-light-opacity, 0.5)), 
+                inset var(--inner-dark-x, -1px) var(--inner-dark-y, -1px) 1px rgba(0, 0, 0, var(--inner-dark-opacity, 0.25));
             mix-blend-mode: var(--effects-blend-mode, normal);
-            height: 100%;
-            border-radius: 33px;
+            border-radius: 32px;
             z-index: -1;
             transition: box-shadow 0.3s ease-out;
         }
@@ -345,18 +342,27 @@
         <div class="control-group">
             <div class="control-header">
                 <span>Shine Intensity</span>
-                <span><span id="shineIntensityValue">33</span>%</span>
+                <span><span id="shineIntensityValue">50</span>%</span>
             </div>
-            <input type="range" id="shineIntensity" min="0" max="100" value="33" step="1">
+            <input type="range" id="shineIntensity" min="0" max="100" value="50" step="1">
         </div>
         
-        <!-- Inner shadow opacity control (0-100%) -->
+        <!-- Light inner shadow opacity control (0-100%) -->
         <div class="control-group">
             <div class="control-header">
-                <span>Inner Shadow Opacity</span>
-                <span><span id="innerShadowOpacityValue">50</span>%</span>
+                <span>Light Inner Shadow</span>
+                <span><span id="innerShadowLightOpacityValue">50</span>%</span>
             </div>
-            <input type="range" id="innerShadowOpacity" min="0" max="100" value="50" step="1">
+            <input type="range" id="innerShadowLightOpacity" min="0" max="100" value="50" step="1">
+        </div>
+        
+        <!-- Dark inner shadow opacity control (0-100%) -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>Dark Inner Shadow</span>
+                <span><span id="innerShadowDarkOpacityValue">25</span>%</span>
+            </div>
+            <input type="range" id="innerShadowDarkOpacity" min="0" max="100" value="25" step="1">
         </div>
         
         <!-- Toggle: light appears where mouse is vs opposite corner -->
@@ -1039,8 +1045,9 @@ class SimpleCardSystem {
             grainOpacity: 0.3,
             shineEnabled: true,
             effectsVisible: true, // Controls both shine and inner shadow visibility
-            shineIntensity: 33, // 0-100, maps to 0.0-0.6 internally (33% = current 0.2)
-            innerShadowOpacity: 50, // 0-100, maps to 0.0-1.0 internally (50% = current 0.5)
+            shineIntensity: 50, // 0-100, maps to 0.0-0.6 internally (50% = current 0.3)
+            innerShadowLightOpacity: 50, // 0-100, controls white/light inner shadow opacity
+            innerShadowDarkOpacity: 25, // 0-100, controls black/dark inner shadow opacity
             invertEffects: true,
             oppositeCorners: false,
             duplicateVisible: true,
@@ -1508,8 +1515,7 @@ class SimpleCardSystem {
         if (!overlay) return;
         
         // Calculate shadow positions based on invert and opposite corners settings
-        const lightIntensity = 2; // Adjust for stronger/weaker effect
-        const shadowIntensity = 12; // Adjust for stronger/weaker large shadows
+        const lightIntensity = 1; // Adjust for stronger/weaker edge effect
         
         // Visual: Create depth illusion through directional inner shadows
         // direction = 1: shadows follow mouse | -1: shadows appear opposite to mouse
@@ -1524,21 +1530,11 @@ class SimpleCardSystem {
         const darkX = normalizedX * lightIntensity * direction;
         const darkY = normalizedY * lightIntensity * direction;
         
-        // Larger soft shadows with base offsets
-        const shadowLightX = -normalizedX * shadowIntensity * direction - 8 * direction;
-        const shadowLightY = -normalizedY * shadowIntensity * direction - 7 * direction;
-        const shadowDarkX = normalizedX * shadowIntensity * direction + 4 * direction;
-        const shadowDarkY = normalizedY * shadowIntensity * direction + 4 * direction;
-        
         // Apply CSS variables to update edge inner shadow
         overlay.style.setProperty('--inner-light-x', `${lightX.toFixed(1)}px`);
         overlay.style.setProperty('--inner-light-y', `${lightY.toFixed(1)}px`);
         overlay.style.setProperty('--inner-dark-x', `${darkX.toFixed(1)}px`);
         overlay.style.setProperty('--inner-dark-y', `${darkY.toFixed(1)}px`);
-        overlay.style.setProperty('--inner-shadow-light-x', `${shadowLightX.toFixed(1)}px`);
-        overlay.style.setProperty('--inner-shadow-light-y', `${shadowLightY.toFixed(1)}px`);
-        overlay.style.setProperty('--inner-shadow-dark-x', `${shadowDarkX.toFixed(1)}px`);
-        overlay.style.setProperty('--inner-shadow-dark-y', `${shadowDarkY.toFixed(1)}px`);
     }
     
     handleMouseLeave() {
@@ -1629,10 +1625,6 @@ class SimpleCardSystem {
         overlay.style.setProperty('--inner-light-y', '1px');
         overlay.style.setProperty('--inner-dark-x', '-1px');
         overlay.style.setProperty('--inner-dark-y', '-1px');
-        overlay.style.setProperty('--inner-shadow-light-x', '-8px');
-        overlay.style.setProperty('--inner-shadow-light-y', '-7px');
-        overlay.style.setProperty('--inner-shadow-dark-x', '4px');
-        overlay.style.setProperty('--inner-shadow-dark-y', '4px');
     }
     
     toggleShadows(enabled) {
@@ -1674,12 +1666,15 @@ class SimpleCardSystem {
         // Control INNER SHADOW visibility
         if (this.edgeInnerShadow) {
             if (enabled) {
-                // Restore inner shadow opacity from setting
-                const opacity = this.settings.innerShadowOpacity / 100;
-                this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', opacity.toFixed(3));
+                // Restore inner shadow opacity from settings
+                const lightOpacity = this.settings.innerShadowLightOpacity / 100;
+                const darkOpacity = this.settings.innerShadowDarkOpacity / 100;
+                this.edgeInnerShadow.style.setProperty('--inner-light-opacity', lightOpacity.toFixed(3));
+                this.edgeInnerShadow.style.setProperty('--inner-dark-opacity', darkOpacity.toFixed(3));
             } else {
-                // Hide inner shadow completely
-                this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', '0');
+                // Hide inner shadows completely
+                this.edgeInnerShadow.style.setProperty('--inner-light-opacity', '0');
+                this.edgeInnerShadow.style.setProperty('--inner-dark-opacity', '0');
             }
         }
     }
@@ -1839,7 +1834,8 @@ class SimpleCardSystem {
         this.attachSliderListener('shadowOffset', 'shadowOffset');
         this.attachSliderListener('shadowBlur', 'shadowBlur');
         this.attachSliderListener('shineIntensity', 'shineIntensity');
-        this.attachSliderListener('innerShadowOpacity', 'innerShadowOpacity');
+        this.attachSliderListener('innerShadowLightOpacity', 'innerShadowLightOpacity');
+        this.attachSliderListener('innerShadowDarkOpacity', 'innerShadowDarkOpacity');
         this.attachSliderListener('parallaxIntensity', 'parallaxIntensity');
         this.attachDropdownListener('effectsBlendMode', 'effectsBlendMode');
         this.attachGrainSliderListener('grainScale', 'grainScale');
@@ -1871,11 +1867,17 @@ class SimpleCardSystem {
                 if (this.settings.shadowsEnabled) {
                     this.resetBoxShadows();
                 }
-            } else if (settingName === 'innerShadowOpacity') {
-                // Update inner shadow opacity CSS variable immediately for real-time feedback
+            } else if (settingName === 'innerShadowLightOpacity') {
+                // Update light inner shadow opacity CSS variable immediately for real-time feedback
                 const opacity = value / 100; // Convert 0-100 to 0.0-1.0
                 if (this.edgeInnerShadow) {
-                    this.edgeInnerShadow.style.setProperty('--inner-shadow-opacity', opacity.toFixed(3));
+                    this.edgeInnerShadow.style.setProperty('--inner-light-opacity', opacity.toFixed(3));
+                }
+            } else if (settingName === 'innerShadowDarkOpacity') {
+                // Update dark inner shadow opacity CSS variable immediately for real-time feedback
+                const opacity = value / 100; // Convert 0-100 to 0.0-1.0
+                if (this.edgeInnerShadow) {
+                    this.edgeInnerShadow.style.setProperty('--inner-dark-opacity', opacity.toFixed(3));
                 }
             } else if (settingName === 'parallaxIntensity' || settingName === 'maxTiltX' || settingName === 'maxTiltY') {
                 // Update parallax factors when intensity or tilt range changes
