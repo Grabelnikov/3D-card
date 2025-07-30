@@ -115,6 +115,11 @@
             transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
+        /* Grain canvas synchronized transition for mouse-leave */
+        .image-container.mouse-leave #grainCanvas {
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
         .control-group {
             margin-bottom: 15px;
             margin-top: 15px;
@@ -1094,7 +1099,58 @@ class SimpleCardSystem {
         this.duplicateScaleFactor = this.settings.duplicateScale / 100;
         this.duplicateOpacityFactor = this.settings.duplicateOpacity / 100;
         
+        // Cache for grain canvas Z position
+        this.lastGrainZ = -7;
+        
         this.init();
+    }
+    
+    // Calculate required Z distance for grain canvas to prevent clipping
+    calculateGrainCanvasZ(rotX, rotY) {
+        // Apply amplification factor to account for rapid movement beyond slider limits
+        const amplifiedRotX = Math.abs(rotX) * 1.4;
+        const amplifiedRotY = Math.abs(rotY) * 1.4;
+        
+        // Convert to radians
+        const rotXRad = amplifiedRotX * Math.PI / 180;
+        const rotYRad = amplifiedRotY * Math.PI / 180;
+        
+        // Pre-calculate trigonometric values for performance
+        const sinRotX = Math.sin(rotXRad);
+        const cosRotY = Math.cos(rotYRad);
+        const sinRotY = Math.sin(rotYRad);
+        
+        // Card corners relative to center (270×400px card)
+        const corners = [
+            { x: 135, y: 200 },   // Bottom-right
+            { x: -135, y: 200 },  // Bottom-left  
+            { x: 135, y: -200 },  // Top-right
+            { x: -135, y: -200 }  // Top-left
+        ];
+        
+        // Calculate maximum Z displacement from any corner
+        let maxZ = 0;
+        corners.forEach(corner => {
+            const z = Math.abs(corner.x * sinRotY + corner.y * sinRotX * cosRotY);
+            maxZ = Math.max(maxZ, z);
+        });
+        
+        // Calculate required Z position with safety buffer
+        const requiredZ = -(maxZ + 25);
+        
+        // Keep grain at least -7px behind duplicate (-5px)
+        return Math.min(requiredZ, -7);
+    }
+    
+    // Update grain canvas Z position
+    updateGrainCanvasZ(rotX, rotY) {
+        if (!this.grainCanvas || !this.settings.grainEnabled) return;
+        
+        const newZ = this.calculateGrainCanvasZ(rotX, rotY);
+        
+        // Update Z position to maintain synchronization
+        this.grainCanvas.style.transform = `translateZ(${newZ.toFixed(1)}px)`;
+        this.lastGrainZ = newZ;
     }
     
     // Parallax optimization methods
@@ -1136,8 +1192,8 @@ class SimpleCardSystem {
         if (this.grainCanvas) {
             try {
                 this.grainRenderer = new GrainShadowRenderer(this.grainCanvas, this.settings);
-                // Set static grain canvas transform once (safe distance for 4° tilt - 30px safety margin)
-                this.grainCanvas.style.transform = 'translateZ(-30px)';
+                // Initialize grain canvas Z position
+                this.grainCanvas.style.transform = 'translateZ(-7px)';
             } catch (e) {
                 console.warn('WebGL not available for grain shadows:', e);
                 this.settings.grainEnabled = false;
@@ -1288,10 +1344,15 @@ class SimpleCardSystem {
         const translateChanged = Math.abs(translateX - this.lastTranslateX) >= this.transformThreshold || Math.abs(translateY - this.lastTranslateY) >= this.transformThreshold;
         
         if (rotChanged || translateChanged) {
+            // Update grain canvas Z position FIRST to prevent clipping artifacts
+            if (this.settings.grainEnabled && rotChanged) {
+                this.updateGrainCanvasZ(rotX, rotY);
+            }
+            
             // Standardized transform function order: rotateX() rotateY() translateZ() [scale()] [translate()]
             const baseTransform = `rotateX(${rotX.toFixed(1)}deg) rotateY(${rotY.toFixed(1)}deg)`;
             
-            // Main card layer (reference point)
+            // Main card layer (reference point) - updated after grain positioning
             this.mainImage.style.transform = `${baseTransform} translateZ(0px)`;
             
             // Cache current transform values
@@ -1520,6 +1581,12 @@ class SimpleCardSystem {
         // Reset parallax background position
         if (this.settings.parallaxEnabled) {
             this.mainImage.style.backgroundPosition = '50% 50%';
+        }
+        
+        // Reset grain canvas Z position
+        if (this.grainCanvas && this.settings.grainEnabled) {
+            this.grainCanvas.style.transform = 'translateZ(-7px)';
+            this.lastGrainZ = -7;
         }
         
         this.resetBoxShadows();
@@ -1861,13 +1928,6 @@ class SimpleCardSystem {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.cardSystem = new SimpleCardSystem();
-    
-    // Debug helper functions
-    window.debugGrain = (enabled) => {
-        if (window.cardSystem && window.cardSystem.grainRenderer) {
-            window.cardSystem.setGrainDebugMode(enabled);
-        }
-    };
     
     // 3D Card system initialized
 });
