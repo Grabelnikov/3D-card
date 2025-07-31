@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Card Prototype</title>
+    <link rel="stylesheet" href="grid-system.css">
+    <link rel="stylesheet" href="panel.css">
     <style>
         :root {
+            /* ===== CARD VARIABLES ===== */
             --card-width: 270px;
             --card-height: 400px;
             --card-ratio: calc(var(--card-width) / var(--card-height));
@@ -24,25 +27,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, Arial, sans-serif;
-            display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
-            grid-template-areas: "sidebar content";
             overflow: hidden;
-        }
-
-        .app-sidebar {
-            grid-area: sidebar;
-            height: 100vh;
-            background: #f7f7f7;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .app-content {
-            grid-area: content;
-            height: 100vh;
-            background-color: #ffffff;
-            overflow: visible;
         }
 
         .content-scroll-wrapper {
@@ -120,135 +105,6 @@
             transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .control-group {
-            margin-bottom: 15px;
-            margin-top: 15px;
-        }
-        
-        .control-group:first-of-type {
-            margin-top: 10px;
-        }
-
-        .control-group .heading {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .control-group .heading span {
-            font-weight: 500;
-            color: #666;
-        }
-
-        .app-sidebar h4 {
-            padding-top: 24px;
-            margin: 0;
-        }
-        
-        .app-sidebar > h4:first-child {
-            padding-top: 0;
-        }
-
-        .control-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #ddd;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .control-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #ffffff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .control-group input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #FF5A5F;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        /* SELECT DROPDOWN STYLING */
-        .control-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            font-family: inherit;
-            font-size: 12px;
-            color: #333;
-            cursor: pointer;
-        }
-
-        .control-group select:focus {
-            outline: none;
-            border-color: #007AFF;
-            box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.2);
-        }
-
-        .control-group select:hover {
-            border-color: #999;
-        }
-
-        /* FILE INPUT STYLING */
-        .control-group input[type="file"] {
-            width: 100%;
-            margin-bottom: 8px;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: inherit;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        /* BUTTON STYLING */
-        .control-group button {
-            width: 100%;
-            padding: 6px 12px;
-            background: transparent;
-            color: #222;
-            border: 1px solid #222;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: inherit;
-        }
-
-        .control-group button:hover {
-            background: #222;
-            color: white;
-        }
-
-        /* UPLOAD STATUS TEXT */
-        #uploadStatus {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #666;
-        }
-
-        .control-group.disabled {
-            display: none;
-            pointer-events: none;
-        }
-
-        .control-group.checkbox {
-            padding-top: 16px;
-            margin: 16px 0px;
-        }
 
         /* SHINE EFFECT - Dynamic light reflection that follows mouse position */
         .shine {
@@ -317,11 +173,13 @@
             transition: box-shadow 0.3s ease-out;
         }
 
+
     </style>
 </head>
 <body>
 
-    <div class="app-sidebar">
+    <div class="app-container" data-panel-position="left">
+        <div class="control-panel">
         <h4>Image</h4>
         <div class="control-group">
             <input type="file" id="imageUpload" accept="image/png,image/jpeg">
@@ -546,7 +404,7 @@
         </div>
     </div>
 
-    <div class="app-content">
+        <div class="app-content">
         <div class="content-scroll-wrapper">
             <div class="cards-wrapper" id="cardsWrapper">
             <div class="image-container" data-card="1">
@@ -567,6 +425,8 @@
         </div>
         </div>
     </div>
+
+</div> <!-- Close app-container -->
 
 <script>
 class GrainShadowRenderer {
@@ -1288,8 +1148,8 @@ class SimpleCardSystem {
             this.handleMouseLeave();
         }, { passive: true });
         
-        // Reset card when mouse enters sidebar (adjustment mode)
-        const sidebar = document.querySelector('.app-sidebar');
+        // Reset card when mouse enters control panel (adjustment mode)
+        const sidebar = document.querySelector('.control-panel');
         if (sidebar) {
             sidebar.addEventListener('mouseenter', () => {
                 this.handleMouseLeave();

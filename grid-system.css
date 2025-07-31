@@ -1,0 +1,100 @@
+/* ===== PORTABLE GRID SYSTEM FOR PANEL LAYOUTS ===== */
+/* 
+This CSS file provides a flexible grid system for applications with side panels.
+Usage: Import this file and use the .app-container with .control-panel and .app-content
+
+Basic structure:
+<div class="app-container" data-panel-position="left">
+    <div class="control-panel">Panel content</div>
+    <div class="app-content">Main content</div>
+</div>
+*/
+
+:root {
+    /* ===== PANEL LAYOUT VARIABLES ===== */
+    /* Panel Configuration */
+    --panel-width: 300px;
+    --panel-position: left;
+    --panel-gap: 0px;
+    
+    /* Layout Grid Templates */
+    --grid-columns-left: var(--panel-width) minmax(0, 1fr);
+    --grid-columns-right: minmax(0, 1fr) var(--panel-width);
+    --grid-areas-left: "panel content";
+    --grid-areas-right: "content panel";
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* ===== PORTABLE APP CONTAINER SYSTEM ===== */
+.app-container {
+    display: grid;
+    height: 100vh;
+    width: 100vw;
+    /* Default: panel on left */
+    grid-template-columns: var(--grid-columns-left);
+    grid-template-areas: var(--grid-areas-left);
+    gap: var(--panel-gap);
+}
+
+/* Right-positioned panel */
+.app-container[data-panel-position="right"] {
+    grid-template-columns: var(--grid-columns-right);
+    grid-template-areas: var(--grid-areas-right);
+}
+
+.app-content {
+    grid-area: content;
+    height: 100vh;
+    background-color: #ffffff;
+    overflow: visible;
+    /* Ensure content takes available space properly */
+    min-width: 0;
+}
+
+/* ===== RESPONSIVE BEHAVIOR ===== */
+/* Mobile: Stack panel on top */
+@media (max-width: 768px) {
+    :root {
+        --panel-width: 100%;
+    }
+    
+    .app-container,
+    .app-container[data-panel-position="right"] {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas: 
+            "panel"
+            "content";
+    }
+    
+    .control-panel {
+        height: auto;
+        max-height: 40vh;
+    }
+    
+    .app-content {
+        height: auto;
+        min-height: 60vh;
+    }
+}
+
+/* Tablet: Smaller panel width */
+@media (min-width: 769px) and (max-width: 1024px) {
+    :root {
+        --panel-width: 250px;
+    }
+}

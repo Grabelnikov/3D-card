@@ -1,0 +1,250 @@
+<!-- ===== CONTROL PANEL HTML STRUCTURE ===== -->
+<!-- 
+This HTML file contains the complete control panel structure for the 3D card prototype.
+
+INTEGRATION INSTRUCTIONS:
+1. Include this file's content inside an app-container div
+2. Import grid-system.css and panel.css 
+3. Ensure JavaScript properly binds to all control IDs
+4. Use data-panel-position="left" or "right" on app-container for positioning
+
+REQUIRED CSS FILES:
+- grid-system.css (for layout)
+- panel.css (for styling)
+
+REQUIRED JAVASCRIPT:
+- All event listeners must bind to the IDs defined below
+- Control values should be read from these input elements
+- Value display spans (ending with "Value") need updates on change
+
+STRUCTURE:
+<div class="app-container" data-panel-position="left">
+    <!-- INSERT CONTENT BELOW -->
+    <div class="app-content">Your main content</div>
+</div>
+-->
+
+<div class="control-panel">
+    <h4>Image</h4>
+    <div class="control-group">
+        <input type="file" id="imageUpload" accept="image/png,image/jpeg">
+        <button id="resetImage">Remove Image</button>
+        <div id="uploadStatus"></div>
+    </div>
+
+    <h4>Effects</h4>
+    <!-- Master toggle for both shine and inner shadow effects -->
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="shineToggle" checked> 
+            Visible
+        </label>
+    </div>
+    
+    <!-- Shine brightness control (0-100%) -->
+    <div class="control-group">
+        <div class="control-header">
+            <span>Shine Intensity</span>
+            <span><span id="shineIntensityValue">50</span>%</span>
+        </div>
+        <input type="range" id="shineIntensity" min="0" max="100" value="50" step="1">
+    </div>
+    
+    <!-- Light inner shadow opacity control (0-100%) -->
+    <div class="control-group">
+        <div class="control-header">
+            <span>Light Inner Shadow</span>
+            <span><span id="innerShadowLightOpacityValue">50</span>%</span>
+        </div>
+        <input type="range" id="innerShadowLightOpacity" min="0" max="100" value="50" step="1">
+    </div>
+    
+    <!-- Dark inner shadow opacity control (0-100%) -->
+    <div class="control-group">
+        <div class="control-header">
+            <span>Dark Inner Shadow</span>
+            <span><span id="innerShadowDarkOpacityValue">25</span>%</span>
+        </div>
+        <input type="range" id="innerShadowDarkOpacity" min="0" max="100" value="25" step="1">
+    </div>
+    
+    <!-- Toggle: light appears where mouse is vs opposite corner -->
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="invertEffects" checked> 
+            Follows cursor
+        </label>
+    </div>
+    <!-- Makes shine and shadow appear in different corners -->
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="oppositeCorners"> 
+            Opposite Corners
+        </label>
+    </div>
+    
+    <!-- Blend mode for both shine and inner shadow effects -->
+    <div class="control-group">
+        <div class="control-header">
+            <span>Effects Blend Mode</span>
+        </div>
+        <select id="effectsBlendMode">
+            <option value="normal">Normal</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+        </select>
+    </div>
+
+    <h4>Parallax</h4>
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="parallaxToggle" checked> 
+            Background Parallax
+        </label>
+    </div>
+    
+    <div class="control-group">
+        <div class="heading">
+            <label for="parallaxIntensity">Intensity</label>
+            <span><span id="parallaxIntensityValue">2</span>%</span>
+        </div>
+        <input type="range" id="parallaxIntensity" min="0" max="10" value="2" step="1">
+    </div>
+
+    <h4>Card</h4>
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="motionToggle" checked> 
+            Interactive
+        </label>
+    </div>
+
+    <div class="control-group rotation-control">
+        <div class="heading">
+            <label for="rotationX">X Rotation</label>
+            <span><span id="rotationXValue">4</span>°</span>
+        </div>
+        <input type="range" id="rotationX" min="0" max="20" value="4" step="1">
+    </div>
+    
+    <div class="control-group rotation-control">
+        <div class="heading">
+            <label for="rotationY">Y Rotation</label>
+            <span><span id="rotationYValue">4</span>°</span>
+        </div>
+        <input type="range" id="rotationY" min="0" max="20" value="4" step="1">
+    </div>
+
+    <h4>Duplicate</h4>
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="duplicateVisible" checked> 
+            Visible
+        </label>
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="duplicateScale">Scale</label>
+            <span><span id="duplicateScaleValue">100</span>%</span>
+        </div>
+        <input type="range" id="duplicateScale" min="50" max="100" value="100" step="1">
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="duplicateOpacity">Opacity</label>
+            <span><span id="duplicateOpacityValue">70</span>%</span>
+        </div>
+        <input type="range" id="duplicateOpacity" min="0" max="100" value="70" step="1">
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="duplicateYOffset">Y Offset</label>
+            <span><span id="duplicateYOffsetValue">18</span>px</span>
+        </div>
+        <input type="range" id="duplicateYOffset" min="0" max="64" value="18" step="1">
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="duplicateBlur">Blur</label>
+            <span><span id="duplicateBlurValue">24</span>px</span>
+        </div>
+        <input type="range" id="duplicateBlur" min="0" max="48" value="24" step="1">
+    </div>
+
+    <h4>Grain</h4>
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="grainToggle" checked> 
+            Visible
+        </label>
+    </div>
+
+    <div class="control-group grain-control">
+        <div class="heading">
+            <label for="grainScale">Grain Scale</label>
+            <span><span id="grainScaleValue">0.03</span></span>
+        </div>
+        <input type="range" id="grainScale" min="0.01" max="0.1" value="0.03" step="0.005">
+    </div>
+
+    <div class="control-group grain-control">
+        <div class="heading">
+            <label for="grainIntensity">Grain Intensity</label>
+            <span><span id="grainIntensityValue">1</span></span>
+        </div>
+        <input type="range" id="grainIntensity" min="0.0" max="3.0" value="1" step="0.1">
+    </div>
+
+    <div class="control-group grain-control">
+        <div class="heading">
+            <label for="grainBias">Grain Bias</label>
+            <span><span id="grainBiasValue">0</span></span>
+        </div>
+        <input type="range" id="grainBias" min="-1.0" max="1.0" value="0" step="0.1">
+    </div>
+
+    <div class="control-group grain-control">
+        <div class="heading">
+            <label for="grainOpacity">Grain Opacity</label>
+            <span><span id="grainOpacityValue">0.3</span></span>
+        </div>
+        <input type="range" id="grainOpacity" min="0.0" max="1.0" value="0.3" step="0.05">
+    </div>
+
+    <h4>Shadows</h4>
+
+    <div class="control-group checkbox">
+        <label>
+            <input type="checkbox" id="svgShadowsToggle" checked> 
+            Visible
+        </label>
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="shadowOpacity">Shadows Opacity</label>
+            <span><span id="shadowOpacityValue">100</span>%</span>
+        </div>
+        <input type="range" id="shadowOpacity" min="0" max="200" value="100" step="5">
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="shadowOffset">Shadows Offset</label>
+            <span><span id="shadowOffsetValue">100</span>%</span>
+        </div>
+        <input type="range" id="shadowOffset" min="0" max="200" value="100" step="5">
+    </div>
+
+    <div class="control-group">
+        <div class="heading">
+            <label for="shadowBlur">Shadows Blur</label>
+            <span><span id="shadowBlurValue">100</span>%</span>
+        </div>
+        <input type="range" id="shadowBlur" min="0" max="200" value="100" step="5">
+    </div>
+</div>

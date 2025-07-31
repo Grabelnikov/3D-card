@@ -1,293 +1,380 @@
-# 3D Card Prototype - Project Guidelines for Claude
+# CLAUDE.md
 
-## Project Overview
-Interactive 3D card prototype demonstrating celebratory moment UI for Airbnb. Features smooth animations, dynamic shadows with natural color bleeding, and real-time parameter controls. Built as proof-of-concept to get design team buy-in and help developers evaluate implementation feasibility.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Target Users
-1. **Airbnb Design Team**: Need to evaluate visual impact and interaction feel for celebratory moments
-2. **Airbnb Developers**: Need to assess technical feasibility and implementation complexity
+# 3D Card Prototype - AI Assistant Guidelines
 
-## Success Metrics
+## 🚀 Quick Reference
+
+### Essential Commands
+```bash
+npm start              # Development server (http://127.0.0.1:8080)
+npm test              # Basic validation
+```
+
+### Key Files & Classes
+- **`index.html`** - Single-file application (HTML + CSS + JS)
+- **`GrainShadowRenderer`** (line ~572) - WebGL shadow effects
+- **`SimpleCardSystem`** (line ~1033) - Main controller
+- **`assets/sofa.jpg`** - Default background image
+
+### Control Pattern (Add New Features)
+```javascript
+// 1. Add to settings
+this.settings = { newParameter: defaultValue };
+// 2. Create UI control
+attachSliderListener('newParameter', 'newParameter');
+// 3. Apply effect
+element.style.property = this.settings.newParameter;
+```
+
+---
+
+## 📋 Planning & Todo Management
+
+### Planning Workflow
+1. **Always enter plan mode first** for non-trivial tasks
+2. **Write detailed plans** to `.claude/tasks/TASK_NAME.md` 
+3. **Plan should include**: implementation steps, reasoning, task breakdown
+4. **Think MVP** - don't over-plan
+5. **Get approval** before proceeding - ask user to review plan
+6. **Update plans** as you work with implementation details
+
+### Todo Management Strategy
+- **Use TodoWrite tool** for active task tracking during implementation
+- **Use .claude/tasks/*.md files** for planning and detailed documentation
+- **Mark tasks complete immediately** when finished - don't batch
+- **Only one task "in_progress"** at a time
+- **Break complex tasks** into specific, actionable steps
+
+### When to Use Which Tool
+- **TodoWrite**: Active implementation tracking, real-time progress
+- **Task files**: Planning, detailed specs, handoff documentation
+- **Both**: For complex features requiring both planning and tracking
+
+---
+
+## 🛠️ Tool Usage Patterns
+
+### Investigation & Search
+```javascript
+// For finding specific code/functions
+Glob + Grep (parallel)      // Multiple searches simultaneously
+Read                        // Specific files you know exist
+
+// For open-ended research
+Task tool                   // Complex investigations, multiple rounds
+```
+
+### Code Modification Priority
+1. **Edit/MultiEdit** - Modify existing files (preferred)
+2. **Write** - Only when creating new files is absolutely necessary
+3. **Never create** documentation files unless explicitly requested
+
+### Performance-Critical Paths
+- **Always test immediately** after changes affecting animations
+- **Run npm start** to verify 60fps performance
+- **Check all controls** work after modifications
+
+---
+
+## 🎯 Decision Making Framework
+
+### When Requirements Are Unclear
+1. **Analyze existing patterns** in the codebase first
+2. **Choose the approach** that matches current architecture
+3. **Prefer simpler implementation** (MVP mindset)
+4. **Ask for clarification** only when multiple valid approaches exist
+5. **Flag potential performance impacts** immediately
+
+### Priority System
+- **60fps performance** - Non-negotiable
+- **Real-time controls** - Must work instantly  
+- **Single-file architecture** - Maintain unless complexity demands otherwise
+- **Designer accessibility** - Code must be understandable
+
+### Conflict Resolution
+- **Performance vs Features**: Always choose performance
+- **Simplicity vs Flexibility**: Choose simplicity for MVP
+- **Current vs Future**: Implement current needs, document future plans
+
+---
+
+## 🔧 Error Handling & Debugging
+
+### Common Issues & Solutions
+```javascript
+// Performance degradation
+- Check will-change usage (use sparingly)
+- Verify requestAnimationFrame usage
+- Test with all effects enabled
+
+// Control not working
+- Verify attachSliderListener() call
+- Check settings object has property
+- Ensure CSS custom property is applied
+
+// Animation jank
+- Use CSS transforms instead of position changes
+- Batch DOM updates
+- Cache calculations outside event handlers
+```
+
+### Performance Testing
+```bash
+# Run server and test in Chrome DevTools
+npm start
+# Check Performance tab for 60fps
+# Monitor Memory tab for leaks
+# Test with all controls at maximum values
+```
+
+### WebGL Issues
+- Check browser WebGL support
+- Verify shader compilation
+- Test canvas context creation
+- Monitor console for WebGL errors
+
+---
+
+## 🔍 Research Patterns
+
+### Understanding Existing Code
+1. **Start with architecture overview** (lines 326-383 in this file)
+2. **Read main classes** (GrainShadowRenderer, SimpleCardSystem)
+3. **Trace control flow** from UI controls to visual effects
+4. **Check CSS custom properties** usage pattern
+
+### Adding New Features
+1. **Find similar existing feature** for pattern reference
+2. **Identify required settings** for controls
+3. **Determine CSS/JS integration points**
+4. **Plan WebGL requirements** if needed
+
+### External Knowledge Requirements
+- **Use Task tool** for researching libraries, techniques, best practices
+- **Check for existing solutions** in the codebase first
+- **Prefer vanilla JS solutions** over adding dependencies
+
+---
+
+## 📊 Project Overview
+
+**Interactive 3D card prototype** demonstrating celebratory moment UI for Airbnb. Features smooth animations, dynamic shadows with natural color bleeding, and real-time parameter controls. Built as proof-of-concept to get design team buy-in and help developers evaluate implementation feasibility.
+
+### Target Users
+1. **Airbnb Design Team**: Evaluate visual impact and interaction feel
+2. **Airbnb Developers**: Assess technical feasibility and implementation complexity
+
+### Success Metrics
 - Designers can tweak all visual parameters in real-time during presentations
 - Interaction runs at 60fps on Chrome desktop
 - Developers can understand implementation approach within 5 minutes
 - Zero dependencies for maximum portability
 - Deployable to Vercel in under 2 minutes
 
-## Technical Stack
+### Technical Stack
 - **Frontend**: Vanilla HTML/CSS/JavaScript (no frameworks unless absolutely necessary)
 - **Graphics**: WebGL for advanced shadow effects only
 - **Styling**: Inline CSS for dynamic properties, CSS variables for theming
 - **Deployment**: Static hosting on Vercel
 - **Target**: Chrome desktop (primary), mobile-friendly bonus
 
-## Inspiration & References
-- **Apple TV OS cards**: Depth, smooth transitions, elegant hover states
-- **Key differentiator**: Natural color bleeding via duplicate shadow layer
+---
 
-## Architecture Principles
-- Single file simplicity - everything in one HTML unless it grows too complex
-- Performance first - every animation must hit 60fps
-- Real-time controls - all parameters adjustable without code changes
-- Visual clarity - code should be understandable by designers
+## ✅ Current Implementation Status
 
-## Coding Standards
-- Use descriptive variable names that designers understand
-- Comment complex calculations (especially 3D transforms)
-- Keep control panel organized by visual effect type
-- CSS transforms in consistent order: `rotateX() rotateY() translateZ() [scale()] [translate()]`
-- Use requestAnimationFrame for smooth animations
-- Debounce/throttle mouse events if performance drops
+### ✅ Implemented Features
+- ✅ **3D Card System**: Mouse-controlled rotation with smooth animations
+- ✅ **Duplicate Shadow Layer**: Blurred copy for natural color bleeding
+- ✅ **Dynamic Controls**: Real-time parameter adjustment sidebar
+- ✅ **Background Parallax**: Smart sizing with overflow handling
+- ✅ **WebGL Grain Shadows**: Fragment shader-based grain effects
+- ✅ **Performance Optimizations**: 60fps animations with requestAnimationFrame
 
-## Key Features & Controls
-### Current Controls
+### ✅ Current Controls Available
 - Duplicate card scale, opacity, Y offset, blur
 - Rotating shadows toggle
-- Interactive motion toggle
+- Interactive motion toggle  
 - Dynamic shine effect toggle
 - Manual rotation controls (X/Y axes)
 - Background parallax toggle and intensity control
-- Smart background sizing (cover vs parallax overflow)
+- Grain shadow controls (scale, intensity, bias)
 
-### Future Control Considerations
-- Color bleeding intensity
-- Animation timing curves
-- Z-depth adjustments
-- Multiple card support
-- Celebration animation triggers
+### 🏗️ Architecture Patterns in Use
 
-## Common Patterns
-### Adding New Controls
+#### Settings Management
 ```javascript
-// 1. Add to settings object
+// Centralized settings object pattern
 this.settings = {
-    newParameter: defaultValue
+    duplicateScale: 1.05,
+    duplicateOpacity: 0.7,
+    parallaxEnabled: true,
+    grainScale: 0.025,
+    // ... other parameters
 };
-
-// 2. Create control UI
-attachSliderListener('newParameter', 'newParameter');
-
-// 3. Apply in transform/effect methods
-element.style.property = this.settings.newParameter;
 ```
 
-### Performance Optimization
-- Use CSS transforms over position changes
-- Batch DOM updates
-- Cache calculations outside event handlers
-- Use CSS will-change sparingly
+#### CSS Transform System
+- Transform order: `rotateX() rotateY() translateZ() [scale()] [translate()]`
+- CSS custom properties: `--rot-x`, `--rot-y`, `--dup-transform`
+- Layered shadows: 6px, 18px, 36px offsets
 
-## Constraints & Edge Cases
-- Must maintain 60fps with all effects enabled
-- Shadow calculations must feel physically accurate
-- Color bleeding should enhance, not distract
-- Controls must be intuitive for non-technical users
-- Mouse leave animations need special easing (0.6s cubic-bezier)
+#### Control Binding Pattern
+```javascript
+attachSliderListener('controlId', 'settingName');
+```
 
-## Testing Checklist
-- [ ] All controls provide instant visual feedback
-- [ ] Smooth transitions on rapid mouse movement
-- [ ] No jank on parameter changes
-- [ ] Works fullscreen and windowed
-- [ ] Graceful degradation if features unsupported
+---
 
-## AI Instructions
-### When modifying this prototype:
-1. Preserve all existing functionality unless explicitly asked to remove
-2. Maintain single-file architecture unless complexity demands separation
-3. Test performance impact of new features immediately
-4. Add new controls to sidebar following existing patterns
-5. Document any non-obvious calculations
+## 🚧 Planned Features (Future Implementation)
 
-### When adding features:
-1. Start with simplest implementation
-2. Add to controls panel only if designers need to adjust it
-3. Ensure mobile compatibility isn't broken
-4. Keep celebratory moment use case in mind
+### 1. Image Upload (Priority: High)
+**Implementation**: Local file upload with instant preview
+- Accept: PNG, JPG only (max 5MB, 2000×2000)
+- Replace gradient on both main and duplicate cards
+- Add reset to default option
 
-### Communication style:
-- Explain visual/UX changes in designer-friendly terms
-- Provide technical details for developer audience
-- Flag any performance concerns immediately
-- Suggest alternatives if request might impact smoothness
+### 2. Advanced Animation Controls (Priority: Medium)
+- Color bleeding intensity controls
+- Animation timing curve adjustments
+- Z-depth fine-tuning
+- Celebration animation triggers
 
-## Deployment Instructions
+### 3. Multiple Card Support (Priority: Low)
+- Support for multiple cards in scene
+- Card-to-card interactions
+- Batch control applications
 
-### Local Testing
+---
+
+## 🎨 Design Guidelines
+
+### Visual Standards
+- **Apple TV OS inspiration**: Depth, smooth transitions, elegant hover states
+- **Color bleeding**: Enhance, don't distract
+- **Shadow accuracy**: Must feel physically accurate
+- **Control intuitiveness**: Non-technical users should understand
+
+### Animation Requirements
+- **60fps mandatory** with all effects enabled
+- **Smooth transitions** on rapid mouse movement
+- **No jank** on parameter changes
+- **Mouse leave easing**: 0.6s cubic-bezier
+
+### Code Quality
+- **Descriptive variables** that designers understand
+- **Comment complex calculations** (especially 3D transforms)  
+- **Organized control panel** by visual effect type
+- **Visual clarity** - code readable by designers
+
+---
+
+## 🧪 Testing & Validation
+
+### Actionable Testing Checklist
 ```bash
-# Option 1: Python (if installed)
-python -m http.server 8000
-# Visit http://localhost:8000
+# 1. Performance Test
+npm start
+# Open Chrome DevTools > Performance tab
+# Record 10 seconds of interaction
+# Verify consistent 60fps
 
-# Option 2: Node.js (if installed)
-npx http-server
-# Visit http://localhost:8080
+# 2. Control Test  
+# Move every slider/toggle and verify instant feedback
+# Test rapid parameter changes for smoothness
+# Verify no console errors
 
-# Option 3: VS Code
-# Install "Live Server" extension
-# Right-click index.html → "Open with Live Server"
+# 3. Edge Case Test
+# Test fullscreen and windowed modes
+# Test with/without WebGL support
+# Test on different screen sizes
+
+# 4. Feature Integration Test
+# Enable all effects simultaneously
+# Verify performance doesn't degrade
+# Test control combinations
+```
+
+### Performance Benchmarks
+- **Frame rate**: Consistent 60fps during interaction
+- **Memory usage**: No leaks during extended use
+- **Load time**: Under 2 seconds on desktop
+- **Control response**: Under 16ms (1 frame) latency
+
+---
+
+## 🚀 Deployment & Development
+
+### Development Server
+```bash
+npm start                    # Recommended (http://127.0.0.1:8080)
+npx http-server             # Alternative (http://localhost:8080)
 ```
 
 ### Deploy to Vercel
 ```bash
-# Option 1: Vercel CLI
-npm i -g vercel  # Install once
-vercel          # Deploy (follow prompts)
-vercel --prod   # Deploy to production
+# CLI method
+npm i -g vercel
+vercel --prod
 
-# Option 2: Drag & Drop
-# Visit vercel.com
-# Drag your project folder to the dashboard
-
-# Option 3: Git Integration
-# Push to GitHub/GitLab/Bitbucket
-# Connect repo in Vercel dashboard
-# Auto-deploys on every push
+# Or drag project folder to vercel.com dashboard
 ```
 
-### Sharing Links
-- Local: `http://localhost:8000`
-- Vercel Preview: `https://[project-name]-[hash].vercel.app`
-- Vercel Production: `https://[project-name].vercel.app`
-
-## Planned Features
-
-### 1. Grainy Shadow Effect (Priority: High)
-**Implementation**: WebGL shader for rotating shadow only
-- Use fragment shader similar to reference code
-- Add controls: grain scale, intensity, bias
-- No animation (static grain pattern)
-- Performance impact acceptable if needed
-- Must be toggleable for A/B comparison
-
-**Controls to add:**
-```javascript
-grainScale: 0.025      // Size of grain pattern
-grainIntensity: 1.5    // Strength of effect
-grainBias: -0.5        // Light vs dark grain balance
-grainEnabled: true     // Toggle for performance testing
+### File Structure
+```
+/
+├── index.html          # Single-file application (HTML + CSS + JS)
+├── assets/sofa.jpg     # Default card background image  
+└── package.json        # Dev dependencies (live-server)
 ```
 
-**Reference Implementation Pattern:**
-```glsl
-// Simplified fragment shader approach from reference
-// Apply simplex noise to shadow areas only
-float simplexNoise(vec2 p) {
-    // 2D simplex noise implementation
-}
+---
 
-// Shadow with grain
-if (shadow > 0.0) {
-    vec2 noiseCoord = fragCoord / 100.0;
-    float noiseValue = simplexNoise(noiseCoord * frequency);
-    float grainVariation = (noiseValue - 0.5) * 2.0;
-    shadow *= (1.0 + grainVariation * shadow);
-}
-```
+## 🎯 AI Assistant Instructions
 
-**Key Implementation Notes:**
-- Shadow layers use box-shadow offsets: 6px, 18px, 36px
-- Grain modulates shadow intensity, not position
-- Use WebGL canvas overlay for shadow rendering
-- Composite with CSS elements using blend modes
+### Code Modification Priorities
+1. **Preserve all existing functionality** unless explicitly asked to remove
+2. **Maintain single-file architecture** unless complexity demands separation
+3. **Test performance impact** of new features immediately
+4. **Add controls to sidebar** following existing patterns
+5. **Document non-obvious calculations**
 
-### 2. Image Upload (Priority: Medium)
-**Implementation**: Local file upload with instant preview
-- Accept: PNG, JPG only
-- Max size: 5MB
-- Max resolution: 2000×2000
-- Image persists until manual reset (no auto-clearing)
-- Replace gradient on both main card and duplicate
-- Blur on duplicate creates natural color bleed
+### Communication Style
+- **Visual/UX changes**: Explain in designer-friendly terms
+- **Technical details**: Provide for developer audience  
+- **Performance concerns**: Flag immediately
+- **Alternatives**: Suggest when requests might impact smoothness
 
-**Technical approach:**
-```javascript
-// File input handler
-const reader = new FileReader();
-reader.onload = (e) => {
-    mainCard.style.background = `url(${e.target.result})`;
-    duplicateCard.style.background = `url(${e.target.result})`;
-};
-```
+### Quality Gates
+- ✅ **All controls provide instant visual feedback**
+- ✅ **Smooth transitions on rapid mouse movement**
+- ✅ **No jank on parameter changes**
+- ✅ **Works fullscreen and windowed**
+- ✅ **Graceful degradation if features unsupported**
 
-### 3. Background Parallax (Priority: Completed)
-**Implementation**: CSS background-position manipulation with intelligent image sizing
-- Dynamic background positioning based on card tilt direction
-- Smart background sizing: cover (parallax off) vs calculated overflow (parallax on)
-- Automatic aspect ratio handling for any image size
-- Performance optimization through conditional sizing
-- Smooth transitions matching existing card animations
+---
 
-**Controls added:**
-```javascript
-parallaxEnabled: true,     // Toggle parallax effect
-parallaxIntensity: 2      // 0-10% shift at max tilt (default 2%)
-```
+## 🔄 Implementation Workflow
 
-**Core Algorithm:**
-```javascript
-// Dynamic background sizing for parallax overflow
-calculateParallaxBackgroundSize(imageW, imageH) {
-    const containerW = this.cardSystem.mainImage.offsetWidth;
-    const containerH = this.cardSystem.mainImage.offsetHeight;
-    
-    // Calculate scale factor (same as background-size: cover)
-    const scaleX = containerW / imageW;
-    const scaleY = containerH / imageH;
-    const coverScale = Math.max(scaleX, scaleY);
-    
-    // Apply cover scale + 15% overflow for parallax
-    const finalScale = coverScale * 1.15;
-    
-    return `${Math.round(imageW * finalScale)}px ${Math.round(imageH * finalScale)}px`;
-}
+### For New Features
+1. **Research existing patterns** in codebase
+2. **Plan implementation** with TodoWrite
+3. **Start with simplest version**
+4. **Add controls** only if designers need them
+5. **Test performance immediately**
+6. **Document approach** for future reference
 
-// Parallax positioning
-const bgX = 50 - (rotY / maxTiltY) * parallaxIntensity;
-const bgY = 50 + (rotX / maxTiltX) * parallaxIntensity;
-```
+### For Bug Fixes
+1. **Reproduce issue** with specific steps
+2. **Identify root cause** in code
+3. **Test fix** doesn't break other features
+4. **Verify performance** remains at 60fps
+5. **Update relevant documentation**
 
-**Key Implementation Notes:**
-- Background moves opposite to card tilt for natural depth perception
-- 15% overflow ensures movement range without revealing edges
-- Conditional sizing: cover (off) vs calculated (on) for optimal performance
-- Integrates seamlessly with existing mouse movement system
-- Works with default sofa.jpg and uploaded images
-- Rotation range limited to 0-20° for realistic interaction
-
-## Implementation Guidelines
-
-### For Grainy Shadow:
-1. Create separate WebGL context for shadow rendering
-2. Composite with existing CSS/DOM elements
-3. Ensure shadow grain follows card rotation
-4. Keep grain subtle for professional appearance
-5. Test performance with all effects combined
-
-### For Background Parallax (Completed):
-1. Add parallax controls to sidebar following existing patterns
-2. Implement conditional background sizing for performance
-3. Ensure smooth integration with existing mouse movement
-4. Test with various image aspect ratios
-5. Validate 60fps performance with all effects enabled
-
-### For Image Upload:
-1. Add file input to control panel
-2. Validate file type and size client-side
-3. Use object-fit: cover for consistent sizing
-4. Show upload progress/status
-5. Add "reset to gradient" option
-
-## Updated Constraints
-- WebGL usage allowed specifically for shadow effects
-- Maintain 60fps target but acceptable degradation with grain
-- File handling must be memory efficient
-- All new features must be toggleable
-
-## Next Steps & Roadmap
-1. ~~Implement background parallax~~ ✅ **COMPLETED**
-2. Implement grainy shadow with WebGL
-3. Add image upload functionality
-
-### Reference Files
-- `reference/grainy-shadow-reference.html` - Full WebGL grainy shadow implementation
+### For Performance Optimization
+1. **Profile current performance** with DevTools
+2. **Identify bottlenecks** systematically
+3. **Apply optimizations** incrementally
+4. **Measure improvement** after each change
+5. **Ensure no feature regression**

@@ -1,0 +1,391 @@
+/* ===== CONTROL PANEL STYLES ===== */
+/* 
+This CSS file provides comprehensive styling for control panels.
+Usage: Import this file to get a complete control panel styling system.
+
+Basic requirements:
+- Import grid-system.css for layout
+- Use .control-panel class for the main container
+- Use .control-group class for individual control containers
+*/
+
+:root {
+    /* ===== CONTROL PANEL VARIABLES ===== */
+    /* Theme Colors */
+    --controls-bg: #f7f7f7;
+    --controls-accent: #FF5A5F;
+    --controls-text: #666;
+    --controls-text-dark: #333;
+    --controls-text-darker: #222;
+    --controls-border: #ddd;
+    --controls-border-focus: #007AFF;
+    --controls-border-hover: #999;
+    --controls-bg-white: #ffffff;
+    
+    /* Spacing System */
+    --controls-gap-xs: 6px;
+    --controls-gap-sm: 8px;
+    --controls-gap-md: 15px;
+    --controls-gap-lg: 20px;
+    --controls-gap-xl: 24px;
+    
+    /* Input Dimensions */
+    --controls-input-height: 6px;
+    --controls-slider-thumb-size: 18px;
+    --controls-border-radius: 8px;
+    --controls-border-radius-sm: 4px;
+    --controls-border-radius-xs: 3px;
+    
+    /* Transitions */
+    --controls-transition: 0.3s ease-out;
+    --controls-transition-fast: 0.15s ease;
+    
+    /* Typography */
+    --controls-font-size: 12px;
+    --controls-font-size-sm: 11px;
+    --controls-font-weight: 500;
+}
+
+/* ===== MAIN CONTROL PANEL CONTAINER ===== */
+.control-panel {
+    grid-area: panel;
+    height: 100vh;
+    background: var(--controls-bg);
+    padding: var(--controls-gap-lg);
+    overflow-y: auto;
+    /* Prevent panel from affecting main content layout */
+    min-width: 0;
+}
+
+/* ===== SECTION HEADERS ===== */
+.control-panel h4 {
+    padding-top: var(--controls-gap-xl);
+    margin: 0;
+    color: var(--controls-text-dark);
+}
+
+.control-panel > h4:first-child {
+    padding-top: 0;
+}
+
+/* ===== CONTROL GROUPS ===== */
+.control-group {
+    margin-bottom: var(--controls-gap-md);
+    margin-top: var(--controls-gap-md);
+}
+
+.control-group:first-of-type {
+    margin-top: 10px;
+}
+
+.control-group .heading {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--controls-gap-sm);
+}
+
+.control-group .heading span {
+    font-weight: var(--controls-font-weight);
+    color: var(--controls-text);
+}
+
+/* Control Group Modifiers */
+.control-group.checkbox {
+    padding-top: 16px;
+    margin: 16px 0px;
+}
+
+.control-group.disabled {
+    display: none;
+    pointer-events: none;
+}
+
+/* ===== INPUT COMPONENTS ===== */
+
+/* Range Sliders */
+.control-group input[type="range"] {
+    width: 100%;
+    height: var(--controls-input-height);
+    border-radius: var(--controls-border-radius-xs);
+    background: var(--controls-border);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: var(--controls-transition-fast);
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--controls-slider-thumb-size);
+    height: var(--controls-slider-thumb-size);
+    border-radius: 50%;
+    background: var(--controls-bg-white);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: var(--controls-transition-fast);
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.control-group input[type="range"]::-moz-range-thumb {
+    width: var(--controls-slider-thumb-size);
+    height: var(--controls-slider-thumb-size);
+    border-radius: 50%;
+    background: var(--controls-accent);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: var(--controls-transition-fast);
+}
+
+.control-group input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Select Dropdowns */
+.control-group select {
+    width: 100%;
+    padding: var(--controls-gap-sm);
+    border: 1px solid var(--controls-border);
+    border-radius: var(--controls-border-radius);
+    background: var(--controls-bg-white);
+    font-family: inherit;
+    font-size: var(--controls-font-size);
+    color: var(--controls-text-dark);
+    cursor: pointer;
+    transition: var(--controls-transition);
+}
+
+.control-group select:focus {
+    outline: none;
+    border-color: var(--controls-border-focus);
+    box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.2);
+}
+
+.control-group select:hover {
+    border-color: var(--controls-border-hover);
+}
+
+/* File Inputs */
+.control-group input[type="file"] {
+    width: 100%;
+    margin-bottom: var(--controls-gap-sm);
+    padding: var(--controls-gap-xs);
+    border: 1px solid var(--controls-border);
+    border-radius: var(--controls-border-radius-sm);
+    font-family: inherit;
+    font-size: var(--controls-font-size);
+    cursor: pointer;
+    transition: var(--controls-transition);
+}
+
+.control-group input[type="file"]:hover {
+    border-color: var(--controls-border-hover);
+}
+
+/* Buttons */
+.control-group button {
+    width: 100%;
+    padding: var(--controls-gap-xs) 12px;
+    background: transparent;
+    color: var(--controls-text-darker);
+    border: 1px solid var(--controls-text-darker);
+    border-radius: var(--controls-border-radius-sm);
+    cursor: pointer;
+    font-size: var(--controls-font-size);
+    font-family: inherit;
+    transition: var(--controls-transition);
+}
+
+.control-group button:hover {
+    background: var(--controls-text-darker);
+    color: var(--controls-bg-white);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-group button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== STATUS TEXT ===== */
+#uploadStatus {
+    margin-top: var(--controls-gap-sm);
+    font-size: var(--controls-font-size-sm);
+    color: var(--controls-text);
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 768px) {
+    .control-panel {
+        padding: var(--controls-gap-md);
+        height: auto;
+        max-height: 40vh;
+        border-bottom: 1px solid var(--controls-border);
+    }
+    
+    .control-group {
+        margin-bottom: 12px;
+        margin-top: 12px;
+    }
+    
+    .control-panel h4 {
+        padding-top: var(--controls-gap-lg);
+    }
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+.control-group input:focus,
+.control-group select:focus,
+.control-group button:focus {
+    outline: 2px solid var(--controls-border-focus);
+    outline-offset: 2px;
+}
+
+/* ===== ENHANCED VISUAL FEEDBACK ===== */
+.control-group label {
+    cursor: pointer;
+    transition: var(--controls-transition-fast);
+}
+
+.control-group label:hover {
+    color: var(--controls-text-dark);
+}
+
+/* ===== BEM-STYLE UTILITY CLASSES ===== */
+/* Following ACSS patterns for future extensibility */
+
+/* Control Panel Components */
+.controls {
+    /* Base controls container class - ready for future expansion */
+    position: relative;
+}
+
+.controls__section {
+    /* Section header styling */
+    padding-top: var(--controls-gap-xl);
+    margin: 0;
+    color: var(--controls-text-dark);
+}
+
+.controls__section--first {
+    /* First section modifier */
+    padding-top: 0;
+}
+
+.controls__group {
+    /* Control group styling */
+    margin-bottom: var(--controls-gap-md);
+    margin-top: var(--controls-gap-md);
+}
+
+.controls__group--checkbox {
+    /* Checkbox group modifier */
+    padding-top: 16px;
+    margin: 16px 0px;
+}
+
+.controls__group--disabled {
+    /* Disabled group modifier */
+    display: none;
+    pointer-events: none;
+}
+
+.controls__header {
+    /* Control header styling */
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--controls-gap-sm);
+}
+
+.controls__label {
+    /* Control label styling */
+    font-weight: var(--controls-font-weight);
+    color: var(--controls-text);
+    cursor: pointer;
+    transition: var(--controls-transition-fast);
+}
+
+.controls__label:hover {
+    color: var(--controls-text-dark);
+}
+
+.controls__value {
+    /* Value display styling */
+    font-weight: var(--controls-font-weight);
+    color: var(--controls-text);
+}
+
+.controls__input {
+    /* Base input styling */
+    transition: var(--controls-transition);
+    font-family: inherit;
+}
+
+.controls__input--range {
+    /* Range input modifier */
+    width: 100%;
+    height: var(--controls-input-height);
+    border-radius: var(--controls-border-radius-xs);
+    background: var(--controls-border);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.controls__input--select {
+    /* Select input modifier */
+    width: 100%;
+    padding: var(--controls-gap-sm);
+    border: 1px solid var(--controls-border);
+    border-radius: var(--controls-border-radius);
+    background: var(--controls-bg-white);
+    font-size: var(--controls-font-size);
+    color: var(--controls-text-dark);
+    cursor: pointer;
+}
+
+.controls__input--file {
+    /* File input modifier */
+    width: 100%;
+    margin-bottom: var(--controls-gap-sm);
+    padding: var(--controls-gap-xs);
+    border: 1px solid var(--controls-border);
+    border-radius: var(--controls-border-radius-sm);
+    font-size: var(--controls-font-size);
+    cursor: pointer;
+}
+
+.controls__button {
+    /* Button styling */
+    width: 100%;
+    padding: var(--controls-gap-xs) 12px;
+    background: transparent;
+    color: var(--controls-text-darker);
+    border: 1px solid var(--controls-text-darker);
+    border-radius: var(--controls-border-radius-sm);
+    cursor: pointer;
+    font-size: var(--controls-font-size);
+    font-family: inherit;
+    transition: var(--controls-transition);
+}
+
+.controls__button:hover {
+    background: var(--controls-text-darker);
+    color: var(--controls-bg-white);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controls__status {
+    /* Status text styling */
+    margin-top: var(--controls-gap-sm);
+    font-size: var(--controls-font-size-sm);
+    color: var(--controls-text);
+}
