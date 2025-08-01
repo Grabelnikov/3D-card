@@ -1595,10 +1595,13 @@ class SimpleCardSystem {
             // Update cached computed values when relevant settings change
             if (settingName === 'duplicateScale') {
                 this.duplicateScaleFactor = value / 100;
-                // Force immediate transform update with current rotation
-                const currentRotX = this.normalizedRotX * this.settings.maxTiltX;
-                const currentRotY = this.normalizedRotY * this.settings.maxTiltY;
-                const baseTransform = `rotateX(${currentRotX.toFixed(1)}deg) rotateY(${currentRotY.toFixed(1)}deg)`;
+                // Force immediate transform update with neutral rotation for adjustment mode
+                const baseTransform = `rotateX(0deg) rotateY(0deg)`;
+                const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${this.duplicateScaleFactor.toFixed(3)}) translate(0px, ${this.settings.duplicateYOffset}px)`;
+                this.duplicateImage.style.setProperty('--dup-transform', duplicateTransform);
+            } else if (settingName === 'duplicateYOffset') {
+                // Force immediate transform update with neutral rotation for adjustment mode
+                const baseTransform = `rotateX(0deg) rotateY(0deg)`;
                 const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${this.duplicateScaleFactor.toFixed(3)}) translate(0px, ${this.settings.duplicateYOffset}px)`;
                 this.duplicateImage.style.setProperty('--dup-transform', duplicateTransform);
             } else if (settingName === 'duplicateOpacity') {
