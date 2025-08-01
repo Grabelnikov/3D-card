@@ -13,12 +13,9 @@ npm test              # Basic validation
 ```
 
 ### Key Files & Classes
-- **`index.html`** - Main application (HTML + JS, now uses external CSS)
-- **`grid-system.css`** - Portable grid layout system for panel positioning
-- **`panel.css`** - Complete control panel styling and theming
-- **`panel.html`** - Control panel HTML structure (copy content for integration)
+- **`index.html`** - Single-file application (HTML + CSS + JS)
 - **`GrainShadowRenderer`** (line ~572) - WebGL shadow effects
-- **`SimpleCardSystem`** (line ~1033) - Main controller  
+- **`SimpleCardSystem`** (line ~1033) - Main controller
 - **`assets/sofa.jpg`** - Default background image
 
 ### Control Pattern (Add New Features)
@@ -76,8 +73,7 @@ Task tool                   // Complex investigations, multiple rounds
 
 ### Performance-Critical Paths
 - **Always test immediately** after changes affecting animations
-- **Check server availability** (developer usually runs `npm start` in separate terminal)
-- **Verify 60fps performance** in browser at http://127.0.0.1:8080
+- **Run npm start** to verify 60fps performance
 - **Check all controls** work after modifications
 
 ---
@@ -278,9 +274,10 @@ attachSliderListener('controlId', 'settingName');
 
 ### Actionable Testing Checklist
 ```bash
-# 1. Performance Test (assumes server running at http://127.0.0.1:8080)
+# 1. Performance Test
+npm start
 # Open Chrome DevTools > Performance tab
-# Record 10 seconds of interaction  
+# Record 10 seconds of interaction
 # Verify consistent 60fps
 
 # 2. Control Test  
@@ -314,8 +311,6 @@ attachSliderListener('controlId', 'settingName');
 npm start                    # Recommended (http://127.0.0.1:8080)
 npx http-server             # Alternative (http://localhost:8080)
 ```
-
-**Note**: Developer typically runs server in separate terminal. Claude should check if server is accessible at http://127.0.0.1:8080 before attempting to launch new instances.
 
 ### Deploy to Vercel
 ```bash
