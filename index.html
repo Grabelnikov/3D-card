@@ -746,7 +746,7 @@ class SimpleCardSystem {
             maxTiltX: 4,
             maxTiltY: 4,
             rotationIntensity: 4,
-            parallaxEnabled: true,
+            parallaxEnabled: false,
             parallaxIntensity: 2,
             effectsBlendMode: 'normal'
         };
@@ -1595,6 +1595,12 @@ class SimpleCardSystem {
             // Update cached computed values when relevant settings change
             if (settingName === 'duplicateScale') {
                 this.duplicateScaleFactor = value / 100;
+                // Force immediate transform update with current rotation
+                const currentRotX = this.normalizedRotX * this.settings.maxTiltX;
+                const currentRotY = this.normalizedRotY * this.settings.maxTiltY;
+                const baseTransform = `rotateX(${currentRotX.toFixed(1)}deg) rotateY(${currentRotY.toFixed(1)}deg)`;
+                const duplicateTransform = `${baseTransform} translateZ(-5px) scale(${this.duplicateScaleFactor.toFixed(3)}) translate(0px, ${this.settings.duplicateYOffset}px)`;
+                this.duplicateImage.style.setProperty('--dup-transform', duplicateTransform);
             } else if (settingName === 'duplicateOpacity') {
                 this.duplicateOpacityFactor = value / 100;
                 // Update CSS variable immediately for real-time feedback
