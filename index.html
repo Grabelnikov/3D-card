@@ -504,8 +504,8 @@ class ImageUploadHandler {
         this.defaultGradient = 'linear-gradient(135deg, #1a1a3a 0%, #8b5cf6 50%, #f0e6ff 100%)';
         this.currentImageUrl = null;
         this.currentImageDimensions = null;
-        this.maxSize = 5 * 1024 * 1024; // 5MB  
-        this.maxDimension = 2000; // Balanced for performance and quality
+        this.maxSize = 10 * 1024 * 1024; // 10MB (increased for better compatibility)  
+        this.maxDimension = 4000; // Increased for modern high-res images
         this.statusElement = document.getElementById('uploadStatus');
         // Background size calculation cache
         this.backgroundSizeCache = new Map();
@@ -558,12 +558,15 @@ class ImageUploadHandler {
         try {
             this.validateFile(file);
             this.setStatus('Processing image...', 'info');
+            console.log('Starting image upload for file:', file.name, 'size:', file.size);
             
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    console.log('FileReader loaded, data URL length:', e.target.result.length);
                     const img = new Image();
                     img.onload = () => {
+                        console.log('Image loaded successfully:', img.width, 'x', img.height);
                         // Dimension validation
                         if (img.width > this.maxDimension || img.height > this.maxDimension) {
                             reject(new Error(`Image too large (max ${this.maxDimension}×${this.maxDimension}px)`));
@@ -578,18 +581,26 @@ class ImageUploadHandler {
                         
                         this.currentImageUrl = e.target.result;
                         this.currentImageDimensions = { width: img.width, height: img.height };
+                        console.log('Applying image background...');
                         this.applyImageBackground();
                         this.setStatus(`Image uploaded (${img.width}×${img.height})`, 'success');
                         this.updateRemoveButtonState();
                         resolve();
                     };
-                    img.onerror = () => reject(new Error('Invalid image file'));
+                    img.onerror = (err) => {
+                        console.error('Image failed to load:', err);
+                        reject(new Error('Invalid image file'));
+                    };
                     img.src = e.target.result;
                 };
-                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.onerror = (err) => {
+                    console.error('FileReader error:', err);
+                    reject(new Error('Failed to read file'));
+                };
                 reader.readAsDataURL(file);
             });
         } catch (error) {
+            console.error('Process upload error:', error);
             this.setStatus(error.message, 'error');
             throw error;
         }
@@ -598,10 +609,12 @@ class ImageUploadHandler {
     applyImageBackground() {
         if (!this.currentImageUrl) {
             console.error('No image URL available to apply');
+            this.setStatus('No image available', 'error');
             return;
         }
         
-        const bgStyle = `url(${this.currentImageUrl})`;
+        // Data URLs don't need quotes and may break with them
+        const bgStyle = `url(${this.currentImageUrl}), ${this.defaultGradient}`;
         
         // Dynamic sizing based on parallax state
         let bgSize;
@@ -618,23 +631,28 @@ class ImageUploadHandler {
         
         // Apply to main card and duplicate only (exclude shadow emulator)
         if (this.cardSystem.mainImage) {
-            this.cardSystem.mainImage.style.background = bgStyle;
+            // Clear the inline background property first to avoid conflicts
+            this.cardSystem.mainImage.style.background = '';
+            this.cardSystem.mainImage.style.backgroundImage = bgStyle;
+            this.cardSystem.mainImage.style.backgroundSize = bgSize;
+            this.cardSystem.mainImage.style.backgroundPosition = '50% 50%';
+            this.cardSystem.mainImage.style.backgroundRepeat = 'no-repeat';
         } else {
             console.error('Main image element not found');
+            this.setStatus('Error: Main image element not found', 'error');
+            return;
         }
         
         if (this.cardSystem.duplicateImage) {
-            this.cardSystem.duplicateImage.style.background = bgStyle;
+            // Clear the inline background property first to avoid conflicts
+            this.cardSystem.duplicateImage.style.background = '';
+            this.cardSystem.duplicateImage.style.backgroundImage = bgStyle;
+            this.cardSystem.duplicateImage.style.backgroundSize = bgSize;
+            this.cardSystem.duplicateImage.style.backgroundPosition = '50% 50%';
+            this.cardSystem.duplicateImage.style.backgroundRepeat = 'no-repeat';
         } else {
             console.error('Duplicate image element not found');
         }
-        
-        // Apply sizing and styling
-        [this.cardSystem.mainImage, this.cardSystem.duplicateImage].filter(Boolean).forEach(el => {
-            el.style.backgroundSize = bgSize;
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundPosition = '50% 50%';
-        });
         
         // Update cached image state after background change
         this.cardSystem.updateImageState();
@@ -648,10 +666,12 @@ class ImageUploadHandler {
         
         // Restore gradient to main and duplicate cards
         [this.cardSystem.mainImage, this.cardSystem.duplicateImage].filter(Boolean).forEach(el => {
-            el.style.background = this.defaultGradient;
-            el.style.backgroundSize = '';
-            el.style.backgroundRepeat = '';
-            el.style.backgroundPosition = '';
+            // Clear inline background first
+            el.style.background = '';
+            el.style.backgroundImage = this.defaultGradient;
+            el.style.backgroundSize = 'cover';
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundPosition = '50% 50%';
         });
         
         this.setStatus('Image removed', 'info');
@@ -677,9 +697,9 @@ class ImageUploadHandler {
     updateRemoveButtonState() {
         const resetButton = document.getElementById('resetImage');
         if (resetButton) {
-            // Check if background contains an image URL
-            const currentBg = this.cardSystem.mainImage.style.background;
-            const hasImage = currentBg.includes('url(');
+            // Check if backgroundImage contains an image URL
+            const currentBg = this.cardSystem.mainImage.style.backgroundImage;
+            const hasImage = currentBg && currentBg.includes('url(');
             
             if (hasImage) {
                 // Image is present (default or user) - can be removed
@@ -834,7 +854,7 @@ class SimpleCardSystem {
     
     // Parallax optimization methods
     updateImageState() {
-        this.hasImageBackground = this.mainImage.style.background.includes('url(');
+        this.hasImageBackground = this.mainImage.style.backgroundImage && this.mainImage.style.backgroundImage.includes('url(');
     }
     
     updateParallaxFactors() {
@@ -891,6 +911,7 @@ class SimpleCardSystem {
                 width: defaultImg.width,
                 height: defaultImg.height
             };
+            // Default image loaded, no status needed
             // Apply dynamic sizing to default image
             this.updateDefaultImageSize();
         };
@@ -906,6 +927,7 @@ class SimpleCardSystem {
                         await this.imageUploadHandler.processUpload(file);
                     } catch (error) {
                         console.error('Image upload failed:', error);
+                        this.imageUploadHandler.setStatus(error.message || 'Upload failed', 'error');
                     }
                 }
             });
