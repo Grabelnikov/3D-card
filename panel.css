@@ -13,10 +13,10 @@ Basic requirements:
     /* ===== CONTROL PANEL VARIABLES ===== */
     /* Theme Colors */
     --color-bg: #f7f7f7;
-    --color-accent: #ff1111;
+    --color-error: #ff1111;
     --color-primary: #222;
+    --color-secondary: #222;
     --color-border: #ddd;
-    --color-border-hover: #222;
     --color-bg-white: #ffffff;
     
     /* Spacing System */
@@ -98,8 +98,8 @@ Basic requirements:
 }
 
 .control-group .heading span:first-child {
-    font-weight: 400;
-    color: var(--color-primary);
+    font-weight: 500;
+    color: var(--color-secondary);
 }
 
 .control-group .heading span:last-child {
@@ -181,7 +181,7 @@ Basic requirements:
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: var(--color-bg-white);
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='%23222' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='var(--color-primary)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right var(--gap-md) center;
     font-family: inherit;
@@ -249,6 +249,7 @@ Basic requirements:
 .control-group label {
     cursor: pointer;
     transition: var(--transition-fast);
+    color: var(--color-secondary);
 }
 
 
