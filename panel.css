@@ -16,7 +16,7 @@ Basic requirements:
     --color-error: #ff1111;
     --color-primary: #222;
     --color-secondary: #222;
-    --color-border: #ddd;
+    --color-tertiary: #ddd;
     --color-bg-white: #ffffff;
     
     /* Spacing System */
@@ -41,6 +41,9 @@ Basic requirements:
     --font-md: 14px;
     --font-sm: 12px;
     --font-family: "IBM Plex Mono", monospace;
+    
+    /* UI Icons */
+    --dropdown-arrow: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='var(--color-primary)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 /* ===== MAIN CONTROL PANEL CONTAINER ===== */
@@ -98,7 +101,7 @@ Basic requirements:
 }
 
 .control-group .heading span:first-child {
-    font-weight: 500;
+    font-weight: 400;
     color: var(--color-secondary);
 }
 
@@ -108,8 +111,6 @@ Basic requirements:
 }
 
 /* Control Group Modifiers */
-.control-group.checkbox {
-}
 
 .control-group.checkbox label {
     display: flex;
@@ -123,9 +124,6 @@ Basic requirements:
     cursor: pointer;
 }
 
-.control-group input[type="checkbox"]:hover {
-    cursor: pointer;
-}
 
 .control-group.disabled {
     display: none;
@@ -139,9 +137,10 @@ Basic requirements:
     width: 100%;
     height: var(--input-height);
     border-radius: var(--radius-xs);
-    background: var(--color-border);
+    background: var(--color-tertiary);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
     transition: var(--transition-fast);
 }
 
@@ -166,7 +165,7 @@ Basic requirements:
 .control-group input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
     height: var(--input-height);
-    background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) var(--progress, 0%), var(--color-border) var(--progress, 0%), var(--color-border) 100%);
+    background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) var(--progress, 0%), var(--color-tertiary) var(--progress, 0%), var(--color-tertiary) 100%);
     border-radius: var(--radius-xs);
     border: none;
     outline: none;
@@ -178,10 +177,10 @@ Basic requirements:
 .control-group select {
     width: 100%;
     padding: var(--gap-md);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-tertiary);
     border-radius: var(--radius);
     background: var(--color-bg-white);
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='var(--color-primary)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: var(--dropdown-arrow);
     background-repeat: no-repeat;
     background-position: right var(--gap-md) center;
     font-family: inherit;
@@ -194,23 +193,23 @@ Basic requirements:
 
 
 .control-group select:hover {
-    border-color: var(--color-border-hover);
+    border-color: var(--color-primary);
 }
 
 /* File Inputs */
 .control-group input[type="file"] {
     width: 100%;
-    margin-bottom: var(--gap-sm);
+    margin-bottom: var(--gap-md);
     padding: var(--gap-md);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-tertiary);
+    border-radius: var(--radius);
     font-family: inherit;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .control-group input[type="file"]:hover {
-    border-color: var(--color-border-hover);
+    border-color: var(--color-primary);
 }
 
 /* Buttons */
@@ -227,9 +226,6 @@ Basic requirements:
     transition: var(--transition);
 }
 
-.control-group button:hover {
-
-}
 
 .control-group button:active {
     transform: translateY(0);
@@ -241,6 +237,7 @@ Basic requirements:
     margin-top: var(--gap-sm);
     font-size: var(--font-sm);
     color: var(--color-primary);
+
 }
 
 
@@ -251,5 +248,4 @@ Basic requirements:
     transition: var(--transition-fast);
     color: var(--color-secondary);
 }
-
 
