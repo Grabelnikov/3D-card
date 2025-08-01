@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Card Prototype</title>
     <link rel="stylesheet" href="grid-system.css">
     <link rel="stylesheet" href="panel.css">
+    <!-- Google Fonts for Control Panel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             /* ===== CARD VARIABLES ===== */
@@ -179,230 +182,8 @@
 <body>
 
     <div class="app-container" data-panel-position="left">
-        <div class="control-panel">
-        <h4>Image</h4>
-        <div class="control-group">
-            <input type="file" id="imageUpload" accept="image/png,image/jpeg">
-            <button id="resetImage">Remove Image</button>
-            <div id="uploadStatus"></div>
-        </div>
-
-        <h4>Effects</h4>
-        <!-- Master toggle for both shine and inner shadow effects -->
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="shineToggle" checked> 
-                Visible
-            </label>
-        </div>
-        
-        <!-- Shine brightness control (0-100%) -->
-        <div class="control-group">
-            <div class="control-header">
-                <span>Shine Intensity</span>
-                <span><span id="shineIntensityValue">50</span>%</span>
-            </div>
-            <input type="range" id="shineIntensity" min="0" max="100" value="50" step="1">
-        </div>
-        
-        <!-- Light inner shadow opacity control (0-100%) -->
-        <div class="control-group">
-            <div class="control-header">
-                <span>Light Inner Shadow</span>
-                <span><span id="innerShadowLightOpacityValue">50</span>%</span>
-            </div>
-            <input type="range" id="innerShadowLightOpacity" min="0" max="100" value="50" step="1">
-        </div>
-        
-        <!-- Dark inner shadow opacity control (0-100%) -->
-        <div class="control-group">
-            <div class="control-header">
-                <span>Dark Inner Shadow</span>
-                <span><span id="innerShadowDarkOpacityValue">25</span>%</span>
-            </div>
-            <input type="range" id="innerShadowDarkOpacity" min="0" max="100" value="25" step="1">
-        </div>
-        
-        <!-- Toggle: light appears where mouse is vs opposite corner -->
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="invertEffects" checked> 
-                Follows cursor
-            </label>
-        </div>
-        <!-- Makes shine and shadow appear in different corners -->
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="oppositeCorners"> 
-                Opposite Corners
-            </label>
-        </div>
-        
-        <!-- Blend mode for both shine and inner shadow effects -->
-        <div class="control-group">
-            <div class="control-header">
-                <span>Effects Blend Mode</span>
-            </div>
-            <select id="effectsBlendMode">
-                <option value="normal">Normal</option>
-                <option value="screen">Screen</option>
-                <option value="overlay">Overlay</option>
-            </select>
-        </div>
-
-        <h4>Parallax</h4>
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="parallaxToggle" checked> 
-                Background Parallax
-            </label>
-        </div>
-        
-        <div class="control-group">
-            <div class="heading">
-                <label for="parallaxIntensity">Intensity</label>
-                <span><span id="parallaxIntensityValue">2</span>%</span>
-            </div>
-            <input type="range" id="parallaxIntensity" min="0" max="10" value="2" step="1">
-        </div>
-
-        <h4>Card</h4>
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="motionToggle" checked> 
-                Interactive
-            </label>
-        </div>
-
-        <div class="control-group rotation-control">
-            <div class="heading">
-                <label for="rotationX">X Rotation</label>
-                <span><span id="rotationXValue">4</span>°</span>
-            </div>
-            <input type="range" id="rotationX" min="0" max="20" value="4" step="1">
-        </div>
-        
-        <div class="control-group rotation-control">
-            <div class="heading">
-                <label for="rotationY">Y Rotation</label>
-                <span><span id="rotationYValue">4</span>°</span>
-            </div>
-            <input type="range" id="rotationY" min="0" max="20" value="4" step="1">
-        </div>
-
-        <h4>Duplicate</h4>
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="duplicateVisible" checked> 
-                Visible
-            </label>
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="duplicateScale">Scale</label>
-                <span><span id="duplicateScaleValue">100</span>%</span>
-            </div>
-            <input type="range" id="duplicateScale" min="50" max="100" value="100" step="1">
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="duplicateOpacity">Opacity</label>
-                <span><span id="duplicateOpacityValue">70</span>%</span>
-            </div>
-            <input type="range" id="duplicateOpacity" min="0" max="100" value="70" step="1">
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="duplicateYOffset">Y Offset</label>
-                <span><span id="duplicateYOffsetValue">18</span>px</span>
-            </div>
-            <input type="range" id="duplicateYOffset" min="0" max="64" value="18" step="1">
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="duplicateBlur">Blur</label>
-                <span><span id="duplicateBlurValue">24</span>px</span>
-            </div>
-            <input type="range" id="duplicateBlur" min="0" max="48" value="24" step="1">
-        </div>
-
-        <h4>Grain</h4>
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="grainToggle" checked> 
-                Visible
-            </label>
-        </div>
-
-        <div class="control-group grain-control">
-            <div class="heading">
-                <label for="grainScale">Grain Scale</label>
-                <span><span id="grainScaleValue">0.03</span></span>
-            </div>
-            <input type="range" id="grainScale" min="0.01" max="0.1" value="0.03" step="0.005">
-        </div>
-
-        <div class="control-group grain-control">
-            <div class="heading">
-                <label for="grainIntensity">Grain Intensity</label>
-                <span><span id="grainIntensityValue">1</span></span>
-            </div>
-            <input type="range" id="grainIntensity" min="0.0" max="3.0" value="1" step="0.1">
-        </div>
-
-        <div class="control-group grain-control">
-            <div class="heading">
-                <label for="grainBias">Grain Bias</label>
-                <span><span id="grainBiasValue">0</span></span>
-            </div>
-            <input type="range" id="grainBias" min="-1.0" max="1.0" value="0" step="0.1">
-        </div>
-
-        <div class="control-group grain-control">
-            <div class="heading">
-                <label for="grainOpacity">Grain Opacity</label>
-                <span><span id="grainOpacityValue">0.3</span></span>
-            </div>
-            <input type="range" id="grainOpacity" min="0.0" max="1.0" value="0.3" step="0.05">
-        </div>
-
-        <h4>Shadows</h4>
-
-        <div class="control-group checkbox">
-            <label>
-                <input type="checkbox" id="svgShadowsToggle" checked> 
-                Visible
-            </label>
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="shadowOpacity">Shadows Opacity</label>
-                <span><span id="shadowOpacityValue">100</span>%</span>
-            </div>
-            <input type="range" id="shadowOpacity" min="0" max="200" value="100" step="5">
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="shadowOffset">Shadows Offset</label>
-                <span><span id="shadowOffsetValue">100</span>%</span>
-            </div>
-            <input type="range" id="shadowOffset" min="0" max="200" value="100" step="5">
-        </div>
-
-        <div class="control-group">
-            <div class="heading">
-                <label for="shadowBlur">Shadows Blur</label>
-                <span><span id="shadowBlurValue">100</span>%</span>
-            </div>
-            <input type="range" id="shadowBlur" min="0" max="200" value="100" step="5">
-        </div>
-    </div>
+        <!-- Control Panel loaded dynamically from panel.html -->
+        <div id="panel-container"></div>
 
         <div class="app-content">
         <div class="content-scroll-wrapper">
@@ -429,6 +210,34 @@
 </div> <!-- Close app-container -->
 
 <script>
+// Load control panel HTML dynamically for modularity
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading control panel...');
+    fetch('panel.html')
+        .then(response => {
+            if (!response.ok) throw new Error(`Failed to load panel: ${response.status}`);
+            return response.text();
+        })
+        .then(html => {
+            const container = document.getElementById('panel-container');
+            if (!container) throw new Error('Panel container not found');
+            container.innerHTML = html;
+            console.log('Control panel loaded successfully');
+            
+            // Initialize 3D card system after panel is loaded
+            window.cardSystem = new SimpleCardSystem();
+            console.log('SimpleCardSystem initialized');
+        })
+        .catch(error => {
+            console.error('Panel loading failed:', error);
+            // Fallback: show error message in panel area
+            const container = document.getElementById('panel-container');
+            if (container) {
+                container.innerHTML = '<div style="padding: 16px; color: red;">Control panel failed to load. Check console for details.</div>';
+            }
+        });
+});
+
 class GrainShadowRenderer {
     constructor(canvas, settings) {
         this.canvas = canvas;
@@ -908,7 +717,6 @@ class SimpleCardSystem {
             shineIntensity: 50, // 0-100, maps to 0.0-0.6 internally (50% = current 0.3)
             innerShadowLightOpacity: 50, // 0-100, controls white/light inner shadow opacity
             innerShadowDarkOpacity: 25, // 0-100, controls black/dark inner shadow opacity
-            invertEffects: true,
             oppositeCorners: false,
             duplicateVisible: true,
             duplicateScale: 100,
@@ -917,6 +725,7 @@ class SimpleCardSystem {
             duplicateBlur: 24,
             maxTiltX: 4,
             maxTiltY: 4,
+            rotationIntensity: 4,
             parallaxEnabled: true,
             parallaxIntensity: 2,
             effectsBlendMode: 'normal'
@@ -929,8 +738,8 @@ class SimpleCardSystem {
         this.edgeInnerShadow = this.container.querySelector('.edge-inner-shadow');
         
         // Pre-calculated direction multipliers for performance
-        this.shineDirection = -1;  // Default: opposite to mouse
-        this.shadowDirection = -1; // Default: opposite to mouse
+        this.shineDirection = 1;  // Always follows cursor
+        this.shadowDirection = 1; // Follows cursor by default
         
         this.grainCanvas = null;
         this.grainRenderer = null;
@@ -968,6 +777,9 @@ class SimpleCardSystem {
         
         // Cache for grain canvas Z position
         this.lastGrainZ = -7;
+        
+        // Performance optimization flag for progress updates
+        this.progressUpdateQueued = false;
         
         this.init();
     }
@@ -1335,7 +1147,7 @@ class SimpleCardSystem {
         }
         
         // Visual: Calculate light reflection angle based on mouse position
-        // shineDirection = 1: light follows mouse | -1: light appears opposite corner
+        // Shine always follows cursor (shineDirection = 1)
         const finalDx = dx * this.shineDirection;
         const finalDy = dy * this.shineDirection;
         
@@ -1378,7 +1190,7 @@ class SimpleCardSystem {
         const lightIntensity = 1; // Adjust for stronger/weaker edge effect
         
         // Visual: Create depth illusion through directional inner shadows
-        // direction = 1: shadows follow mouse | -1: shadows appear opposite to mouse
+        // Shadows follow cursor by default, opposite when "Opposite Corners" enabled
         const direction = this.shadowDirection;
         
         // Apply positioning logic using consistent direction system
@@ -1563,23 +1375,15 @@ class SimpleCardSystem {
         }
     }
     
-    // DIRECTION HELPERS: Calculate where light effects appear
-    // Visual: Returns 1 when light follows mouse, -1 when light appears opposite to mouse
-    getShineDirection() {
-        return this.settings.invertEffects ? 1 : -1;
-    }
     
-    // Visual: Shadow direction creates contrast with shine in "Opposite Corners" mode
-    // Normal: both effects opposite to mouse | Inverted: both follow mouse 
-    // Opposite Corners: one follows mouse, other appears opposite
+    // Visual: Shadow direction - follows cursor by default, opposite when "Opposite Corners" is enabled
     getShadowDirection() {
-        const baseDirection = this.settings.invertEffects ? 1 : -1;
-        return this.settings.oppositeCorners ? -baseDirection : baseDirection;
+        return this.settings.oppositeCorners ? -1 : 1;
     }
     
     // Update pre-calculated direction multipliers when settings change
     updateDirections() {
-        this.shineDirection = this.getShineDirection();
+        this.shineDirection = 1; // Shine always follows cursor
         this.shadowDirection = this.getShadowDirection();
     }
     
@@ -1639,14 +1443,6 @@ class SimpleCardSystem {
             });
         }
 
-        // Invert effects toggle
-        const invertEffects = document.getElementById('invertEffects');
-        if (invertEffects) {
-            invertEffects.addEventListener('change', (e) => {
-                this.settings.invertEffects = e.target.checked;
-                this.updateDirections();
-            });
-        }
 
         // Opposite corners toggle
         const oppositeCorners = document.getElementById('oppositeCorners');
@@ -1688,8 +1484,7 @@ class SimpleCardSystem {
         this.attachSliderListener('duplicateOpacity', 'duplicateOpacity');
         this.attachSliderListener('duplicateYOffset', 'duplicateYOffset');
         this.attachSliderListener('duplicateBlur', 'duplicateBlur');
-        this.attachSliderListener('rotationX', 'maxTiltX');
-        this.attachSliderListener('rotationY', 'maxTiltY');
+        this.attachRotationListener('rotationIntensity');
         this.attachSliderListener('shadowOpacity', 'shadowOpacity');
         this.attachSliderListener('shadowOffset', 'shadowOffset');
         this.attachSliderListener('shadowBlur', 'shadowBlur');
@@ -1702,6 +1497,63 @@ class SimpleCardSystem {
         this.attachGrainSliderListener('grainIntensity', 'grainIntensity');
         this.attachGrainSliderListener('grainBias', 'grainBias');
         this.attachGrainSliderListener('grainOpacity', 'grainOpacity');
+        
+        // Initialize progress fills for all range inputs
+        this.initializeProgressFills();
+    }
+    
+    initializeProgressFills() {
+        // Get all range input elements and initialize their progress fills
+        const rangeInputs = document.querySelectorAll('input[type="range"]');
+        rangeInputs.forEach(input => {
+            if (input.min && input.max && input.value) {
+                this.initializeSliderProgress(input);
+            }
+        });
+    }
+    
+    initializeSliderProgress(element) {
+        // Direct progress update for initialization (bypasses requestAnimationFrame throttling)
+        const value = parseFloat(element.value);
+        const min = parseFloat(element.min);
+        const max = parseFloat(element.max);
+        
+        // Skip update if values are invalid
+        if (isNaN(value) || isNaN(min) || isNaN(max) || max === min) return;
+        
+        // Calculate progress percentage
+        const progressPercent = ((value - min) / (max - min)) * 100;
+        const progressValue = `${Math.round(progressPercent * 100) / 100}%`;
+        
+        // Set progress directly without throttling for immediate initial display
+        element.style.setProperty('--progress', progressValue);
+    }
+    
+    updateSliderProgress(element) {
+        // Consolidated progress update logic with performance optimizations
+        const value = parseFloat(element.value);
+        const min = parseFloat(element.min);
+        const max = parseFloat(element.max);
+        
+        // Skip update if values are invalid
+        if (isNaN(value) || isNaN(min) || isNaN(max) || max === min) return;
+        
+        // Calculate progress percentage
+        const progressPercent = ((value - min) / (max - min)) * 100;
+        const progressValue = `${Math.round(progressPercent * 100) / 100}%`;
+        
+        // Only update if value has changed to avoid unnecessary style recalculations
+        const currentProgress = element.style.getPropertyValue('--progress');
+        if (currentProgress !== progressValue) {
+            // Use requestAnimationFrame for smooth updates during rapid changes
+            if (!this.progressUpdateQueued) {
+                this.progressUpdateQueued = true;
+                requestAnimationFrame(() => {
+                    element.style.setProperty('--progress', progressValue);
+                    this.progressUpdateQueued = false;
+                });
+            }
+        }
     }
     
     attachSliderListener(controlName, settingName) {
@@ -1714,6 +1566,9 @@ class SimpleCardSystem {
             const value = parseInt(e.target.value);
             display.textContent = value;
             this.settings[settingName] = value;
+            
+            // Update progress fill for WebKit browsers
+            this.updateSliderProgress(control);
             
             // Update cached computed values when relevant settings change
             if (settingName === 'duplicateScale') {
@@ -1750,6 +1605,36 @@ class SimpleCardSystem {
         });
     }
     
+    attachRotationListener(controlName) {
+        const control = document.getElementById(controlName);
+        const display = document.getElementById(controlName + 'Value');
+        
+        if (!control || !display) {
+            console.warn('Rotation slider not found:', controlName);
+            return;
+        }
+        
+        control.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            display.textContent = value;
+            
+            // Update progress fill for WebKit browsers
+            this.updateSliderProgress(control);
+            
+            // Apply same value to both X and Y rotation
+            this.settings.maxTiltX = value;
+            this.settings.maxTiltY = value;
+            this.settings.rotationIntensity = value;
+            
+            // Update parallax factors when tilt range changes
+            this.updateParallaxFactors();
+            
+            if (!this.settings.motionEnabled) {
+                this.resetToNeutral();
+            }
+        });
+    }
+    
     attachGrainSliderListener(controlName, settingName) {
         const control = document.getElementById(controlName);
         const display = document.getElementById(controlName + 'Value');
@@ -1763,6 +1648,9 @@ class SimpleCardSystem {
             const value = parseFloat(e.target.value);
             display.textContent = value;
             this.settings[settingName] = value;
+            
+            // Update progress fill for WebKit browsers
+            this.updateSliderProgress(control);
             
             if (this.grainRenderer && this.settings.grainEnabled) {
                 this.grainRenderer.updateGrainSettings(this.settings);
@@ -1787,12 +1675,7 @@ class SimpleCardSystem {
     
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.cardSystem = new SimpleCardSystem();
-    
-    // 3D Card system initialized
-});
+// SimpleCardSystem now initialized after panel loads (see panel loading code above)
 </script>
 </body>
 </html>

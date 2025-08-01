@@ -12,87 +12,119 @@ Basic requirements:
 :root {
     /* ===== CONTROL PANEL VARIABLES ===== */
     /* Theme Colors */
-    --controls-bg: #f7f7f7;
-    --controls-accent: #FF5A5F;
-    --controls-text: #666;
-    --controls-text-dark: #333;
-    --controls-text-darker: #222;
-    --controls-border: #ddd;
-    --controls-border-focus: #007AFF;
-    --controls-border-hover: #999;
-    --controls-bg-white: #ffffff;
+    --color-bg: #f7f7f7;
+    --color-accent: #ff1111;
+    --color-primary: #222;
+    --color-border: #ddd;
+    --color-border-hover: #222;
+    --color-bg-white: #ffffff;
     
     /* Spacing System */
-    --controls-gap-xs: 6px;
-    --controls-gap-sm: 8px;
-    --controls-gap-md: 15px;
-    --controls-gap-lg: 20px;
-    --controls-gap-xl: 24px;
+    --gap-xs: 2px;
+    --gap-sm: 4px;
+    --gap-md: 8px;
+    --gap-lg: 16px;
+    --gap-xl: 32px;
     
     /* Input Dimensions */
-    --controls-input-height: 6px;
-    --controls-slider-thumb-size: 18px;
-    --controls-border-radius: 8px;
-    --controls-border-radius-sm: 4px;
-    --controls-border-radius-xs: 3px;
+    --input-height: 2px;
+    --thumb-size: 10px;
+    --radius: 8px;
+    --radius-sm: 4px;
+    --radius-xs: 2px;
     
     /* Transitions */
-    --controls-transition: 0.3s ease-out;
-    --controls-transition-fast: 0.15s ease;
+    --transition: 0.3s ease-out;
+    --transition-fast: 0.15s ease;
     
     /* Typography */
-    --controls-font-size: 12px;
-    --controls-font-size-sm: 11px;
-    --controls-font-weight: 500;
+    --font-md: 14px;
+    --font-sm: 12px;
+    --font-family: "IBM Plex Mono", monospace;
 }
 
 /* ===== MAIN CONTROL PANEL CONTAINER ===== */
 .control-panel {
     grid-area: panel;
     height: 100vh;
-    background: var(--controls-bg);
-    padding: var(--controls-gap-lg);
+    background: var(--color-bg);
+    padding: var(--gap-lg);
     overflow-y: auto;
     /* Prevent panel from affecting main content layout */
     min-width: 0;
+    font-family: var(--font-family);
+    font-weight: 400;
+    font-size: var(--font-sm);
 }
 
 /* ===== SECTION HEADERS ===== */
 .control-panel h4 {
-    padding-top: var(--controls-gap-xl);
-    margin: 0;
-    color: var(--controls-text-dark);
+    padding-top: var(--gap-xl);
+    padding-bottom: var(--gap-md);
+    color: var(--color-primary);
+    font-size: var(--font-md);
+    font-weight: 500;
 }
 
 .control-panel > h4:first-child {
-    padding-top: 0;
+    padding-top: var(--gap-lg);
 }
 
 /* ===== CONTROL GROUPS ===== */
 .control-group {
-    margin-bottom: var(--controls-gap-md);
-    margin-top: var(--controls-gap-md);
+    margin-bottom: var(--gap-md);
+    margin-top: var(--gap-md);
+    padding-bottom: var(--gap-md);
 }
 
 .control-group:first-of-type {
-    margin-top: 10px;
+    margin-top: var(--gap-md);
+}
+
+/* Remove bottom padding from control groups immediately before h4 headers */
+.control-group:has(+ h4) {
+    padding-bottom: 0;
+}
+
+/* Remove bottom padding from the very last control group */
+.control-group:last-child {
+    padding-bottom: 0;
 }
 
 .control-group .heading {
     display: flex;
     justify-content: space-between;
-    margin-bottom: var(--controls-gap-sm);
+    margin-bottom: var(--gap-sm);
 }
 
-.control-group .heading span {
-    font-weight: var(--controls-font-weight);
-    color: var(--controls-text);
+.control-group .heading span:first-child {
+    font-weight: 400;
+    color: var(--color-primary);
+}
+
+.control-group .heading span:last-child {
+    font-weight: 500;
+    color: var(--color-primary);
 }
 
 /* Control Group Modifiers */
 .control-group.checkbox {
-    padding-top: 16px;
-    margin: 16px 0px;
+}
+
+.control-group.checkbox label {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+}
+
+/* Checkbox Input Styling */
+.control-group input[type="checkbox"] {
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.control-group input[type="checkbox"]:hover {
+    cursor: pointer;
 }
 
 .control-group.disabled {
@@ -105,108 +137,98 @@ Basic requirements:
 /* Range Sliders */
 .control-group input[type="range"] {
     width: 100%;
-    height: var(--controls-input-height);
-    border-radius: var(--controls-border-radius-xs);
-    background: var(--controls-border);
+    height: var(--input-height);
+    border-radius: var(--radius-xs);
+    background: var(--color-border);
     outline: none;
     -webkit-appearance: none;
-    appearance: none;
-    transition: var(--controls-transition-fast);
+    transition: var(--transition-fast);
 }
 
 .control-group input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    appearance: none;
-    width: var(--controls-slider-thumb-size);
-    height: var(--controls-slider-thumb-size);
+    width: var(--thumb-size);
+    height: var(--thumb-size);
     border-radius: 50%;
-    background: var(--controls-bg-white);
+    background: var(--color-primary);
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition: var(--controls-transition-fast);
+    transition: var(--transition-fast);
+    margin-top: -4px; /* Center thumb on track */
 }
 
 .control-group input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1.5);
 }
 
-.control-group input[type="range"]::-moz-range-thumb {
-    width: var(--controls-slider-thumb-size);
-    height: var(--controls-slider-thumb-size);
-    border-radius: 50%;
-    background: var(--controls-accent);
-    cursor: pointer;
+
+
+/* Range Slider Tracks - WebKit Progress Fill Effect */
+.control-group input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: var(--input-height);
+    background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) var(--progress, 0%), var(--color-border) var(--progress, 0%), var(--color-border) 100%);
+    border-radius: var(--radius-xs);
     border: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition: var(--controls-transition-fast);
+    outline: none;
 }
 
-.control-group input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-}
+
 
 /* Select Dropdowns */
 .control-group select {
     width: 100%;
-    padding: var(--controls-gap-sm);
-    border: 1px solid var(--controls-border);
-    border-radius: var(--controls-border-radius);
-    background: var(--controls-bg-white);
+    padding: var(--gap-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg-white);
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='%23222' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--gap-md) center;
     font-family: inherit;
-    font-size: var(--controls-font-size);
-    color: var(--controls-text-dark);
+    font-weight: 500;
+    color: var(--color-primary);
     cursor: pointer;
-    transition: var(--controls-transition);
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-.control-group select:focus {
-    outline: none;
-    border-color: var(--controls-border-focus);
-    box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.2);
-}
 
 .control-group select:hover {
-    border-color: var(--controls-border-hover);
+    border-color: var(--color-border-hover);
 }
 
 /* File Inputs */
 .control-group input[type="file"] {
     width: 100%;
-    margin-bottom: var(--controls-gap-sm);
-    padding: var(--controls-gap-xs);
-    border: 1px solid var(--controls-border);
-    border-radius: var(--controls-border-radius-sm);
+    margin-bottom: var(--gap-sm);
+    padding: var(--gap-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: var(--controls-font-size);
     cursor: pointer;
-    transition: var(--controls-transition);
+    transition: var(--transition);
 }
 
 .control-group input[type="file"]:hover {
-    border-color: var(--controls-border-hover);
+    border-color: var(--color-border-hover);
 }
 
 /* Buttons */
 .control-group button {
     width: 100%;
-    padding: var(--controls-gap-xs) 12px;
+    padding: var(--gap-md);
     background: transparent;
-    color: var(--controls-text-darker);
-    border: 1px solid var(--controls-text-darker);
-    border-radius: var(--controls-border-radius-sm);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius);
     cursor: pointer;
-    font-size: var(--controls-font-size);
     font-family: inherit;
-    transition: var(--controls-transition);
+    font-weight: 500;
+    transition: var(--transition);
 }
 
 .control-group button:hover {
-    background: var(--controls-text-darker);
-    color: var(--controls-bg-white);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 
 .control-group button:active {
@@ -216,176 +238,17 @@ Basic requirements:
 
 /* ===== STATUS TEXT ===== */
 #uploadStatus {
-    margin-top: var(--controls-gap-sm);
-    font-size: var(--controls-font-size-sm);
-    color: var(--controls-text);
+    margin-top: var(--gap-sm);
+    font-size: var(--font-sm);
+    color: var(--color-primary);
 }
 
-/* ===== RESPONSIVE ADJUSTMENTS ===== */
-@media (max-width: 768px) {
-    .control-panel {
-        padding: var(--controls-gap-md);
-        height: auto;
-        max-height: 40vh;
-        border-bottom: 1px solid var(--controls-border);
-    }
-    
-    .control-group {
-        margin-bottom: 12px;
-        margin-top: 12px;
-    }
-    
-    .control-panel h4 {
-        padding-top: var(--controls-gap-lg);
-    }
-}
 
-/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
-.control-group input:focus,
-.control-group select:focus,
-.control-group button:focus {
-    outline: 2px solid var(--controls-border-focus);
-    outline-offset: 2px;
-}
 
 /* ===== ENHANCED VISUAL FEEDBACK ===== */
 .control-group label {
     cursor: pointer;
-    transition: var(--controls-transition-fast);
+    transition: var(--transition-fast);
 }
 
-.control-group label:hover {
-    color: var(--controls-text-dark);
-}
 
-/* ===== BEM-STYLE UTILITY CLASSES ===== */
-/* Following ACSS patterns for future extensibility */
-
-/* Control Panel Components */
-.controls {
-    /* Base controls container class - ready for future expansion */
-    position: relative;
-}
-
-.controls__section {
-    /* Section header styling */
-    padding-top: var(--controls-gap-xl);
-    margin: 0;
-    color: var(--controls-text-dark);
-}
-
-.controls__section--first {
-    /* First section modifier */
-    padding-top: 0;
-}
-
-.controls__group {
-    /* Control group styling */
-    margin-bottom: var(--controls-gap-md);
-    margin-top: var(--controls-gap-md);
-}
-
-.controls__group--checkbox {
-    /* Checkbox group modifier */
-    padding-top: 16px;
-    margin: 16px 0px;
-}
-
-.controls__group--disabled {
-    /* Disabled group modifier */
-    display: none;
-    pointer-events: none;
-}
-
-.controls__header {
-    /* Control header styling */
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--controls-gap-sm);
-}
-
-.controls__label {
-    /* Control label styling */
-    font-weight: var(--controls-font-weight);
-    color: var(--controls-text);
-    cursor: pointer;
-    transition: var(--controls-transition-fast);
-}
-
-.controls__label:hover {
-    color: var(--controls-text-dark);
-}
-
-.controls__value {
-    /* Value display styling */
-    font-weight: var(--controls-font-weight);
-    color: var(--controls-text);
-}
-
-.controls__input {
-    /* Base input styling */
-    transition: var(--controls-transition);
-    font-family: inherit;
-}
-
-.controls__input--range {
-    /* Range input modifier */
-    width: 100%;
-    height: var(--controls-input-height);
-    border-radius: var(--controls-border-radius-xs);
-    background: var(--controls-border);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-.controls__input--select {
-    /* Select input modifier */
-    width: 100%;
-    padding: var(--controls-gap-sm);
-    border: 1px solid var(--controls-border);
-    border-radius: var(--controls-border-radius);
-    background: var(--controls-bg-white);
-    font-size: var(--controls-font-size);
-    color: var(--controls-text-dark);
-    cursor: pointer;
-}
-
-.controls__input--file {
-    /* File input modifier */
-    width: 100%;
-    margin-bottom: var(--controls-gap-sm);
-    padding: var(--controls-gap-xs);
-    border: 1px solid var(--controls-border);
-    border-radius: var(--controls-border-radius-sm);
-    font-size: var(--controls-font-size);
-    cursor: pointer;
-}
-
-.controls__button {
-    /* Button styling */
-    width: 100%;
-    padding: var(--controls-gap-xs) 12px;
-    background: transparent;
-    color: var(--controls-text-darker);
-    border: 1px solid var(--controls-text-darker);
-    border-radius: var(--controls-border-radius-sm);
-    cursor: pointer;
-    font-size: var(--controls-font-size);
-    font-family: inherit;
-    transition: var(--controls-transition);
-}
-
-.controls__button:hover {
-    background: var(--controls-text-darker);
-    color: var(--controls-bg-white);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.controls__status {
-    /* Status text styling */
-    margin-top: var(--controls-gap-sm);
-    font-size: var(--controls-font-size-sm);
-    color: var(--controls-text);
-}

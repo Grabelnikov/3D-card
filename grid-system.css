@@ -65,36 +65,3 @@ body {
     min-width: 0;
 }
 
-/* ===== RESPONSIVE BEHAVIOR ===== */
-/* Mobile: Stack panel on top */
-@media (max-width: 768px) {
-    :root {
-        --panel-width: 100%;
-    }
-    
-    .app-container,
-    .app-container[data-panel-position="right"] {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-        grid-template-areas: 
-            "panel"
-            "content";
-    }
-    
-    .control-panel {
-        height: auto;
-        max-height: 40vh;
-    }
-    
-    .app-content {
-        height: auto;
-        min-height: 60vh;
-    }
-}
-
-/* Tablet: Smaller panel width */
-@media (min-width: 769px) and (max-width: 1024px) {
-    :root {
-        --panel-width: 250px;
-    }
-}
